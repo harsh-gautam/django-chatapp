@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <input type="text" class="form-control" name="roomName">
+    <a href="room/" id="createRoom">Create Room</button></a>
+{% endblock body %}
+
+
+{% block script %}
+    <script>
+        creatRoom = document.querySelector('#createRoom');
+        createRoom.addEventListener('click' , ()=>{
+            let roomName = document.querySelector('.form-control').value;
+            createRoom.setAttribute('href', 'room/'+roomName);
+
+        });
+    </script>
+{% endblock script %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<div class="container">
+    <textarea name="" id="chat-area" cols="80" rows="30"></textarea><br>
+    <input type="text" id="message">
+    <input type="button" id="send-btn" value="SEND">
+</div>
+
+
+
+{% endblock body %}
+
+
+
+{% block script %}
+
+<script>
+    let room = '{{ room_name }}';
+    let user = '{{ request.user }}';
+    url = `ws://${window.location.host}/ws/chat/room/${room}/`;
+    //console.log(url)
+    const socket = new WebSocket(url);
+
+    socket.onopen = function open(){
+        console.log('WebSockets connection created.');
+    }
+
+    if(socket.readyState == WebSocket.OPEN){
+        socket.onopen();
+    }
+
+    socket.onmessage = function(e){
+        const data = JSON.parse(e.data);
+        //console.log(data)
+        document.querySelector('#chat-area').value += `${data.username}: ${data.message} \n`;
+    };
+
+    socket.onerror = function(e) {
+        console.log('WebSocket Error: ' + e);
+    };
+
+    sendBtn = document.querySelector("#send-btn");
+    inputDOM = document.querySelector("#message")
+
+    sendBtn.addEventListener('click', event =>{
+        message = inputDOM.value;
+        username = user;
+        socket.send(JSON.stringify({'message': message, 'username': username}));
+        inputDOM.value = "";
+    });
+
+    inputDOM.addEventListener('keyup', event=>{
+        if(event.keyCode == 13){
+            sendBtn.click();
+        }
+    });
+
+</script>
+
+{% endblock script %}
