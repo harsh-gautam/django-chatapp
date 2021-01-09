@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
 
 {% block body %}
+    <div class="container my-4">
+    <form action="#" method="post" class="form-group">{% csrf_token %}
     <input type="text" class="form-control" name="roomName">
-    <a href="room/" id="createRoom">Create Room</button></a>
+    <button type="submit" class="btn btn-primary">Create Room</button>
+    </form>
+    </div>
 {% endblock body %}
 
 
