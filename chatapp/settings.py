@@ -27,7 +27,7 @@ SECRET_KEY = os.environ['CHAT_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["9252aa92d1f9.ngrok.io"]
+ALLOWED_HOSTS = []
 
 
 # Application definition

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
-  <form action="/chat/signup/" method="post">
+  <form action="/chat/login/" method="post">
     {% csrf_token %}
     {% for field in form %}
       <div>
@@ -9,7 +9,7 @@
         {{ field }}
       </div>
     {% endfor %}
-    <button type="submit">Sign up</button>
+    <button type="submit">Log in</button>
   </form>
-  <p>Already have an account? <a href="{% url 'login' %}">Log in!</a></p>
+  <p>Don't have an account? <a href="/chat/signup">Sign up!</a></p>
 {% endblock body %}
