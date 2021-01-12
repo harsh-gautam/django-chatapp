@@ -127,6 +127,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
+
 ASGI_APPLICATION = 'chatapp.routing.application'
 CHANNEL_LAYERS = {
     "default": {

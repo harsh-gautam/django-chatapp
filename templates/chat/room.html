@@ -2,10 +2,27 @@
 
 {% block body %}
 
-<div class="container">
-    <textarea name="" id="chat-area" cols="80" rows="30" disabled style="resize: none;"></textarea><br>
-    <input type="text" id="message">
-    <input type="button" id="send-btn" value="SEND">
+<div class="container my-2">
+    <div class="row">
+        <div class="card col-8 px-0">
+            <div class="card-header">{{ room_name }}</div>
+            <div class="card-body mx-auto">
+                <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br>
+                <input type="text" id="message">
+                <input type="button" id="send-btn" value="SEND">
+            </div>
+        </div>
+        <div class="card col-3 px-0">
+            <div class="card-header">Users:</div>
+            <div class="card-body">
+                {% for user in users %}
+                <ul class="list-group">
+  <li class="list-group-item">{{ user.username|escape }}: {{ user.status|default:'Offline' }}</li>
+</ul>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -23,36 +40,36 @@
     //console.log(url)
     const socket = new WebSocket(url);
 
-    socket.onopen = function open(){
+    socket.onopen = function open() {
         console.log('WebSockets connection created.');
     }
 
-    if(socket.readyState == WebSocket.OPEN){
+    if (socket.readyState == WebSocket.OPEN) {
         socket.onopen();
     }
 
-    socket.onmessage = function(e){
+    socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         //console.log(data)
         document.querySelector('#chat-area').value += `${data.username}: ${data.message} \n`;
     };
 
-    socket.onerror = function(e) {
+    socket.onerror = function (e) {
         console.log('WebSocket Error: ' + e);
     };
 
     sendBtn = document.querySelector("#send-btn");
     inputDOM = document.querySelector("#message")
 
-    sendBtn.addEventListener('click', event =>{
+    sendBtn.addEventListener('click', event => {
         message = inputDOM.value;
         username = user;
-        socket.send(JSON.stringify({'message': message, 'username': username}));
+        socket.send(JSON.stringify({ 'message': message, 'username': username }));
         inputDOM.value = "";
     });
 
-    inputDOM.addEventListener('keyup', event=>{
-        if(event.keyCode == 13){
+    inputDOM.addEventListener('keyup', event => {
+        if (event.keyCode == 13) {
             sendBtn.click();
         }
     });
