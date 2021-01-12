@@ -1,4 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{room_name}}
+{% endblock title %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/room.css' %}">
+{% endblock head %}
 
 {% block body %}
 
@@ -7,9 +15,19 @@
         <div class="card col-8 px-0">
             <div class="card-header">{{ room_name }}</div>
             <div class="card-body mx-auto">
-                <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br>
-                <input type="text" id="message">
-                <input type="button" id="send-btn" value="SEND">
+                <div id="chat-area" class="overflow-auto">
+                    <!-- <p class="d-flex justify-content-end  mb-2">
+                        <span class="">This is right</span><span class="mx-2">: Harsh </span>
+                    </p>
+                    <p class="d-flex justify-content-start mb-2">
+                        <span class="mx-2">Admin :</span><span class=""> This is left</span>
+                    </p> -->
+                </div>
+                <!-- <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br> -->
+                <div class="row">
+                <div class="col-10"><input class="form-control" type="text" id="message"></div>
+                <div class="col-2"><input class="btn btn-primary" type="button" id="send-btn" value="SEND"></div>
+            </div>
             </div>
         </div>
         <div class="card col-3 px-0">
@@ -17,8 +35,8 @@
             <div class="card-body">
                 {% for user in users %}
                 <ul class="list-group">
-  <li class="list-group-item">{{ user.username|escape }}: {{ user.status|default:'Offline' }}</li>
-</ul>
+                    <li class="list-group-item">{{ user.username|escape }}: {{ user.status|default:'Offline' }}</li>
+                </ul>
                 {% endfor %}
             </div>
         </div>
@@ -32,15 +50,24 @@
 
 
 {% block script %}
-
+<script src="{% static 'js/reconnecting-websocket.js' %}"></script>
 <script>
+    chatWindow = document.getElementById('chat-area');
+    function scrollDown(){
+        var xH = chatWindow.scrollHeight; 
+        chatWindow.scrollTo(0, xH);
+    }
+
+
     let room = '{{ room_name }}';
-    let user = '{{ request.user }}';
+    let user = '{{ username }}';
+    console.log(`User -> ${user}`)
     url = `ws://${window.location.host}/ws/chat/room/${room}/`;
     //console.log(url)
-    const socket = new WebSocket(url);
+    const socket = new ReconnectingWebSocket(url);
 
     socket.onopen = function open() {
+        loadMessages();
         console.log('WebSockets connection created.');
     }
 
@@ -50,9 +77,49 @@
 
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
-        //console.log(data)
-        document.querySelector('#chat-area').value += `${data.username}: ${data.message} \n`;
+        // console.log(data)
+        if(data['command'] === "load_messages"){
+            for(let i=0; i<data['messages'].length; i++){
+                create_message(data['messages'][i]);
+            }
+        } else if(data['command'] === "new_message"){
+            create_message(data['message']);
+        }
     };
+
+    function create_message(data){
+        let message = data['content'];
+        let author = data['author'];
+
+        let p_tag = document.createElement('p');
+        p_tag.classList.add('my-2', 'bg-secondary', 'p-2');
+        let span_name = document.createElement('span');
+        span_name.classList.add("mx-2");
+        
+        let span_msg = document.createElement('span');
+        span_msg.innerText = message;
+        span_msg.classList.add("text-break")
+
+        if (author === user) {
+            p_tag.classList.add('send');
+            span_name.classList.add("text-info");
+            span_msg.classList.add("text-end");
+            span_name.innerText = " : " + author;
+            // span_name.classList.add("rtl");
+            // span_msg.classList.add("rtl");
+            p_tag.appendChild(span_msg);
+            p_tag.appendChild(span_name);
+        } else {
+            p_tag.classList.add('reply');
+            span_name.classList.add("text-warning");
+            span_name.innerText = author + " : ";
+            p_tag.appendChild(span_name);
+            p_tag.appendChild(span_msg);
+        }
+
+        document.querySelector('#chat-area').appendChild(p_tag);
+        scrollDown();
+    }
 
     socket.onerror = function (e) {
         console.log('WebSocket Error: ' + e);
@@ -64,8 +131,10 @@
     sendBtn.addEventListener('click', event => {
         message = inputDOM.value;
         username = user;
-        socket.send(JSON.stringify({ 'message': message, 'username': username }));
+        command = "new_message"
+        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command }));
         inputDOM.value = "";
+        
     });
 
     inputDOM.addEventListener('keyup', event => {
@@ -74,6 +143,9 @@
         }
     });
 
+    function loadMessages(){
+        socket.send(JSON.stringify({'command': 'load_messages' }));
+    }
 </script>
 
 {% endblock script %}
