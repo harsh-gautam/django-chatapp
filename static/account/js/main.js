@@ -1,0 +1,5 @@
+
+
+function onFriendRequestSent(){
+    location.reload()
+}

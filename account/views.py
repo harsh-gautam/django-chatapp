@@ -110,13 +110,16 @@ def account_view(request, *args, **kwargs):
                 # CASE 1: You send friend request
                 if get_friend_req_or_false(user, account) != False:
                     request_sent = FriendReqStatus.YOU_SEND_REQUEST.value
+                    
                 # CASE 2: You recieved friend request
                 elif get_friend_req_or_false(account, user) != False:
                     request_sent = FriendReqStatus.YOU_RECIEVED_REQUEST.value
                     context['pending_friend_req_id'] = get_friend_req_or_false(account, user).id
+                    
                 # CASE 3: No friend request send or recieved
                 else:
                     request_sent = FriendReqStatus.NO_REQUEST_SEND_OR_RECIEVED.value
+                    print("NO REQUEST: ", request_sent)
 
         elif not user.is_authenticated:
             is_self = False

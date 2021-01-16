@@ -20,12 +20,13 @@ from account.views import search_view
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', views.index, name="home"),
+    path('account/', include('account.urls', namespace="account")),
+    path('admin/', admin.site.urls),
+    path('chat/', include('chat.urls', namespace="chat")),
+    path('friends/', include('friends.urls', namespace="friends")),
+
     path('createroom/', views.createroom, name="create room"),
     path('joinroom/', views.joinroom, name="create room"),
-    path('search/', search_view, name="search"),
-
-    path('chat/', include('chat.urls', namespace="chat")),
-    path('account/', include('account.urls', namespace="account")),
+    path('search/', search_view, name="search"),    
 ]

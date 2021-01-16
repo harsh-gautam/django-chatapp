@@ -12,7 +12,7 @@ class FriendReqStatus(Enum):
 # returns the FriendRequest Object if found else False
 def get_friend_req_or_false(sender, reciever):
     try:
-        return FriendRequest.objects.get(sender=sender, reciever=reciever, is_true=True)
-    except:
+        return FriendRequest.objects.get(sender=sender, reciever=reciever, is_active=True)
+    except FriendRequest.DoesNotExist:
         return False
 # ----------------------------------------------------
