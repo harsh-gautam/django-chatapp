@@ -3,7 +3,7 @@ from friends.models import FriendRequest
 
 # Enum class to return constant values
 class FriendReqStatus(Enum):
-    NO_REQUEST_SEND = 1
+    NO_REQUEST_SEND_OR_RECIEVED = 1
     YOU_SEND_REQUEST = 2
     YOU_RECIEVED_REQUEST = 3
 #-------------------------------------
