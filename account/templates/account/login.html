@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container my-4">
+    <div class="card">
+    <div class="card-header">
+    Log In
+  </div>
+  <div class="card-body">
+    <form action="/account/login/" method="post" class="form-group">{% csrf_token %}
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" name="email" id="inputEmail" placeholder="Email">
+            <label for="inputUsername">Email</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" name="password" id="inputPassword" placeholder="Password">
+            <label for="inputPassword">Password</label>
+        </div>
+        <br>
+        {% for fields in login_form %}
+            {% for error in fields.errors %}
+            <p style="color: red;">{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+        {% if login_form.non_field_errors %}
+            <div style="color: red">
+                <p>{{login_form.non_field_errors}}</p>
+            </div>
+        {% endif %}
+        <button class="btn btn-primary" type="submit">Log In</button>
+    </form>
+    </div>
+
+    <p>Don't have an account? <a href="/register">Sign up!</a></p>
+    </div>
+    </div>
+</div>
+
+{% endblock body %}

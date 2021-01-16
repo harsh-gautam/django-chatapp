@@ -1,27 +1,29 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.conf import settings
+
+User = settings.AUTH_USER_MODEL
 
 # Create your models here.
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
-    phone = models.IntegerField(default=0)
-    online = models.IntegerField(default=0)
+# class UserProfile(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
+#     phone = models.IntegerField(default=0)
+#     online = models.IntegerField(default=0)
 
-    # Custom Property
-    @property
-    def username(self):
-        return self.user.username
+#     # Custom Property
+#     @property
+#     def username(self):
+#         return self.user.username
 
-    def __str__(self):
-        return self.user.username
+#     def __str__(self):
+#         return self.user.username
 
-@receiver(post_save, sender=User)
-def create_profile_for_new_user(sender, created, instance, **kwargs):
-    if created:
-        profile = UserProfile(user=instance)
-        profile.save()
+# @receiver(post_save, sender=User)
+# def create_profile_for_new_user(sender, created, instance, **kwargs):
+#     if created:
+#         profile = UserProfile(user=instance)
+#         profile.save()
 
 
 class Contact(models.Model):
@@ -31,21 +33,31 @@ class Contact(models.Model):
     def __str__(self):
         return self.user.username
 
+class ChatRoom(models.Model):
+    title = models.CharField(max_length=124, unique=True, blank=False)
+    participants = models.ManyToManyField(User, related_name="chats", blank=True, null=False)
+    # messages = models.ManyToManyField(Message, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def group_name(self):
+        return f"PublicChatRoom-{self.id}"
+
+
+class MessageManager(models.Manager):
+    def by_room(self, room):
+        qs = Message.objects.filter(room=room).order_by("-timestamp")
+        return qs
+
 class Message(models.Model):
-    contact = models.ForeignKey(Contact, related_name='messages', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='messages', on_delete=models.CASCADE)
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.content[:10] + "... by " + self.author.username
-    
-    def get_last_10_messages():
-        return Message.objects.order_by('-timestamp').all()[:10]
-
-
-class Chat(models.Model):
-    participants = models.ManyToManyField(Contact, related_name="chats", blank=True)
-    messages = models.ManyToManyField(Message, blank=True)
+    objects = MessageManager()
 
     def __str__(self):
-        return f"{self.pk}"
+        return self.content[:20] + "... by " + self.user.username

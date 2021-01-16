@@ -16,13 +16,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from account.views import search_view
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name="index"),
-    path('login/', views.handle_login, name="login"),
-    path('logout/', views.handle_logout, name="logout"),
-    path('register/', views.register, name="register user"),
+    path('', views.index, name="home"),
     path('createroom/', views.createroom, name="create room"),
-    path('chat/', include('chat.urls')),
+    path('joinroom/', views.joinroom, name="create room"),
+    path('search/', search_view, name="search"),
+
+    path('chat/', include('chat.urls', namespace="chat")),
+    path('account/', include('account.urls', namespace="account")),
 ]

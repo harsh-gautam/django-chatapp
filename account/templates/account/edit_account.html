@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile
+{% endblock title %}
+
+{% block body %}
+
+<style>
+    .profile-card {
+        width: 400px;
+    }
+</style>
+
+<div class="card  profile-card">
+    <div class="card-header">Profile</div>
+    <div class="card-body align-items-center">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+            <div class="img-container">
+                <img class="border border-5 border-success rounded-circle" src="{% static 'images/default_profile.png' %}"
+                    alt="profile image" width="150" height="150">
+            </div>
+            <form action="{% url 'account:edit' %}" method="post" class="form-group">
+                <div class="form-floating mb-3">
+                    <input type="text" name="name" class="form-control" id="inputName" placeholder="Name">
+                    <label for="inputName">Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" name="email" class="form-control" id="inputEmail" placeholder="Email">
+                    <label for="inputName">Email</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="inputUserName" placeholder="UserName">
+                    <label for="inputUserName">UserName</label>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

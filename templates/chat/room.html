@@ -32,7 +32,7 @@
         </div>
         <div class="card col-3 px-0">
             <div class="card-header">Users:</div>
-            <div class="card-body">
+            <div class="card-body users">
                 {% for user in users %}
                 <ul class="list-group">
                     <li class="list-group-item">{{ user.username|escape }}: {{ user.status|default:'Offline' }}</li>
@@ -64,7 +64,7 @@
     console.log(`User -> ${user}`)
     url = `ws://${window.location.host}/ws/chat/room/${room}/`;
     //console.log(url)
-    const socket = new ReconnectingWebSocket(url);
+    const socket = new WebSocket(url);
 
     socket.onopen = function open() {
         loadMessages();
@@ -84,6 +84,10 @@
             }
         } else if(data['command'] === "new_message"){
             create_message(data['message']);
+        }
+
+        if(data['command'] === 'connected_users'){
+            set_connected_users(data['connected_users'])
         }
     };
 
@@ -132,7 +136,8 @@
         message = inputDOM.value;
         username = user;
         command = "new_message"
-        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command }));
+        room = "{{ room_name }}"
+        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command, 'room': room }));
         inputDOM.value = "";
         
     });
@@ -145,6 +150,12 @@
 
     function loadMessages(){
         socket.send(JSON.stringify({'command': 'load_messages' }));
+    }
+
+    function set_connected_users(users_list){
+        users_box = document.querySelector('.users')
+        //users_box.innerHTML += 
+        console.log(users_list)
     }
 </script>
 

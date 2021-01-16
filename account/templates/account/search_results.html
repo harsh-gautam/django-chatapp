@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search
+{% endblock title %}
+
+{% block body %}
+
+<div class="card">
+<div class="card-body">
+    <div class="d-flex flex-column"></div>
+    {% if accounts %}
+        {% for account in accounts %}
+        <div class="d-flex align-items-stretch border border-2 mb-2 p-2">
+            <span><img class="border rounded-circle" src="/{{account.0.profile_image}}" alt="" width="50" height="50"></span>
+            <a href="{% url 'account:profile' user_id=account.0.id %}"><h3>{{account.0.name}}</3></a>
+            {% if account.1 %}
+                <span style="color: green;">Friends</span><span style="color: blue;">Send Message</span>
+            {% else %}
+                <span style="color: red;">Not Friends</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <h3>No results</h3>
+    {% endif %}
+</div>
+</div>
+{% endblock body %}

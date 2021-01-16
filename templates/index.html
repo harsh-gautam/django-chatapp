@@ -3,12 +3,18 @@
 {% block body %}
     <h1>Welcome to ChatRoom</h1>
     {% if user.is_authenticated %}
-    <form action="/createroom/" method="post" class="form-group">{% csrf_token %}
-    <input type="text" class="form-control" name="roomName">
+    <form action="/createroom/" method="post" class="form-group mb-2">{% csrf_token %}
+    <input type="text" class="form-control mb-1" name="roomName" placeholder="Create a room">
     <button type="submit" class="btn btn-primary">Create Room</button>
     </form>
+    <h3>or</h3>
+    <form action="/joinroom" method="get" class="form-group mb-2">
+    <input type="text" class="form-control mb-1" name="join" placeholder="Join a room">
+    <button type="submit" class="btn btn-primary">Join Room</button>
+    </form>
     {% else %}
-    <div class="card">
+    <h1>You must be logged in to use the chat app</h1>
+    <!-- <div class="card">
   <div class="card-header">
     Log In
   </div>
@@ -27,7 +33,7 @@
     </div>
 
     <p>Don't have an account? <a href="/register">Sign up!</a></p>
-    </div>
+    </div> -->
     {% endif %}
 {% endblock body %}
 
