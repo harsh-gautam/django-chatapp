@@ -27,7 +27,7 @@ User = settings.AUTH_USER_MODEL
 
 
 class Contact(models.Model):
-    user = models.ForeignKey(User, related_name="friends", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="contacts", on_delete=models.CASCADE)
     friends = models.ManyToManyField('self', blank=True,)
 
     def __str__(self):
