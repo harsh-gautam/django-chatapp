@@ -16,12 +16,16 @@
     <div class="card-header">Profile</div>
     <div class="card-body align-items-center">
         <div class="d-flex flex-column align-items-center justify-content-center">
-            <img class="border border-5 border-success rounded-circle" src="{% static 'images/default_profile.png' %}"
-                alt="profile image" width="150" height="150">
-
-            <p class="mb-1 mt-2 field-heading">Name</p>
-            <h5>{{name}}</h5>
-            <p class='mb-1 mt-2 field-heading'>Email</p>
+        <div class="img-container d-flex flex-column mb-4">
+            <img class="border border-2 border-success" src="{% static 'images/default_profile.png' %}"
+                alt="profile image" width="200" height="200">
+            {% if is_self %}
+            <button class="btn btn-primary btn-sm" onclick="handleEditImage()">Edit Image</button>
+            {% endif %}
+        </div>
+            <p class="mb-1 mt-3 field-heading">Name</p>
+            <h5>{{name|capfirst}}</h5>
+            <p class='mb-1 mt-3 field-heading'>Email</p>
             {% if is_self %}
                 <h5>{{ email }}</h5>
             {% else %}
@@ -31,14 +35,24 @@
                     <h5>{{ email }}</h5>
                 {% endif %}
             {% endif %}
-            <p class="mb-1 mt-2 field-heading">Username</p>
+            <p class="mb-1 mt-3 field-heading">Username</p>
             <h5>{{username}}</h5>
 
             {% if is_self %}
-                <a href="{% url 'account:edit' user_id=id %}" class="btn btn-primary">Update</a>
+            <div class="d-flex flex-column my-4">
+                <a href="{% url 'account:edit' user_id=id %}" class="btn btn-primary mb-3">Update</a>
                 <a href="#">Change Password</a>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
 {% endblock body %}
+
+{% block script %}
+<script>
+function handleEditImage(){
+    alert('This feature will be implemented soon')
+}
+</script>
+{% endblock script %}

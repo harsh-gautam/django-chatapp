@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from account.forms import RegistrationForm, LoginForm
+from account.forms import RegistrationForm, LoginForm, UpdateForm
 from account.models import Account
 
 
@@ -110,4 +110,49 @@ def search_view(request, *args, **kwargs):
 
 
 def edit_account_view(request, *args, **kwargs):
-    return render(request, "account/edit_account.html")
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+    user_id = kwargs.get('user_id')
+    try:
+        account = Account.objects.get(pk=user_id)
+    except:
+        return HttpResponse("Something went wrong!")
+
+    if account.pk != request.user.pk:
+        return HttpResponse("You cannot edit someone else profile")
+    context = {}
+    if request.POST:
+        form = UpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            print("VALID FORM")
+            form.save()
+            # new_username = form.cleaned_data['username']
+            return redirect('account:profile', user_id=account.pk)
+        else:
+            print("INVALID FORM")
+            form = UpdateForm(request.POST, instance=request.user,
+				initial={
+					"id": account.pk,
+					"email": account.email, 
+					"username": account.username,
+                    "name": account.name,
+					# "profile_image": account.profile_image,
+					"hide_email": account.hide_email,
+				}
+			)
+            context['form'] = form
+    else:
+        form = UpdateForm(
+				initial={
+					"id": account.pk,
+					"email": account.email, 
+					"username": account.username,
+                    "name": account.name,
+					# "profile_image": account.profile_image,
+					"hide_email": account.hide_email,
+				}
+			)
+        context['form'] = form
+    # context['DATA_UPLOAD_MAX_MEMORY_SIZE'] = settings.DATA_UPLOAD_MAX_MEMORY_SIZE  # Max image size in Bytes
+    return render(request, "account/edit_account.html", context)
