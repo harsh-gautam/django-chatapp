@@ -16,14 +16,17 @@
             <a href="{% url 'account:profile' user_id=account.0.id %}"><h3>{{account.0.name}}</3></a>
             {% if account.1 %}
                 
-                    
                     <span style="color: green;">Friends</span><span style="color: blue;">Send Message</span>
                 
             {% else %}
-            {% if account.0.pk == request.user.pk %}
-                <span style="color: green;">This is you</span>
+                {% if account.0.pk == request.user.pk %}
+                    <span style="color: green;">This is you</span>
                 {% else %}
-                <span style="color: red;">Not Friends</span>
+                    {% if user.is_authenticated %}
+                    <span style="color: red;">Not Friends</span>
+                    {% else %}
+                    <span style="color: red;"></span>
+                    {% endif %}
                 {% endif %}
             {% endif %}
         </div>

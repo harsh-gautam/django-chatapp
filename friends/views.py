@@ -40,7 +40,7 @@ def send_friend_request(request, *args, **kwargs):
     return HttpResponse(json.dumps(payload), content_type="application/json")
 
 
-def accept_friend_request(request, *args, **kwargs):
+def accept_friend_request(request):
     user = request.user
     payload = {"response": None}
     if user.is_authenticated and request.method == "GET":
@@ -65,5 +65,92 @@ def accept_friend_request(request, *args, **kwargs):
     else:
         payload['result'] = "error"
         payload['response'] = "You must be authenticated to accept friend requests."
+
+    return HttpResponse(json.dumps(payload), content_type="application/json")
+
+def cancel_friend_request(request):
+    user = request.user
+    payload = {"result": "error", "response": None}
+    if user.is_authenticated and request.method == "GET":
+        reciever_id = request.GET['reciever_id']
+        if reciever_id:
+            try:
+                reciever_acc = Account.objects.get(pk=reciever_id)
+                if reciever_acc:
+                    try:
+                        friend_req = FriendRequest.objects.filter(sender=user, reciever=reciever_acc, is_active=True)
+                        if len(friend_req) > 1:
+                            for req in friend_req:
+                                req.cancel()
+                        else:
+                            friend_req.first().cancel()
+                        payload['result'] = "success"
+                        payload['response'] = "Cancelled Friend Request."
+                    except FriendRequest.DoesNotExist:
+                        payload['response'] = f"Cannot cancel request: {e}"
+                else:
+                    payload['response'] = "Something went wrong."
+            except Account.DoesNotExist:
+                payload['response'] = "Cannot find the user that."
+        else:
+            payload['response'] = "Something went wrong."
+    else:
+        payload['response'] = "You must be logged in to perform this action."
+
+    return HttpResponse(json.dumps(payload), content_type="application/json")
+
+
+def decline_friend_request(request):
+    user = request.user
+    payload = {"response": None}
+    if user.is_authenticated and request.method == "GET":
+        friend_req_id = request.GET['friend_req_id']
+        if friend_req_id:
+            try:
+                friend_req = FriendRequest.objects.get(pk=friend_req_id)
+                if friend_req:
+                    friend_req.decline()
+                    payload['result'] = "success"
+                    payload['response'] = "Declined friend request"
+            except FriendRequest.DoesNotExist:
+                payload['result'] = "error"
+                payload['response'] = "Friend Request does not exists."
+
+            if payload['response'] == None:
+                payload['result'] = "error"
+                payload['response'] = "Something went wrong"
+        else:
+            payload['result'] = "error"
+            payload['response'] = "Server Error"
+    else:
+        payload['result'] = "error"
+        payload['response'] = "You must be authenticated to accept friend requests."
+
+    return HttpResponse(json.dumps(payload), content_type="application/json")
+
+def remove_friend(request):
+    user = request.user
+    payload = {"result": "error", "response": None}
+    if user.is_authenticated and request.method == "GET":
+        removee_id = request.GET['removee_id']
+        if removee_id:
+            try:
+                removee_acc = Account.objects.get(pk=removee_id)
+                if removee_acc:
+                    try:
+                        friend_list = FriendList.objects.get(user=user)
+                        friend_list.unfriend(removee_acc)
+                        payload['result'] = "success"
+                        payload['response'] = f"Removed {removee_acc.username} from your friend list."
+                    except Exception as e:
+                        payload['response'] = f"Cannot remove friend: {e}"
+                else:
+                    payload['response'] = "Something went wrong while removing friend."
+            except Account.DoesNotExist:
+                payload['response'] = "Cannot find the user that you want to remove."
+        else:
+            payload['response'] = "Something went wrong."
+    else:
+        payload['response'] = "You must be logged in to perform this action."
 
     return HttpResponse(json.dumps(payload), content_type="application/json")

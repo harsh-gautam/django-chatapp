@@ -145,8 +145,17 @@ def search_view(request, *args, **kwargs):
         search_results = Account.objects.filter(email__icontains=search_query).filter(username__icontains=search_query).filter(name__icontains=search_query).distinct()
         user = request.user
         accounts = []
+        user_friends = []
+        if user.is_authenticated:
+            userAccount = Account.objects.get(username=user)
+            user_friends = FriendList.objects.get(user=userAccount).friends.all()
+
         for account in search_results:
-            accounts.append([account, False]) # No friends yet
+            if account in user_friends:
+                accounts.append([account, True])
+            else:
+                accounts.append([account, False])
+
         context['accounts'] = accounts
 
     return render(request, "account/search_results.html", context)
