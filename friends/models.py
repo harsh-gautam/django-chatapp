@@ -20,7 +20,7 @@ class FriendList(models.Model):
 
     def remove_friend(self, account):
         """
-        Remove a friend
+        Remove a friend, helper for unfriend
         param -> account: the user to remove from friendlist
         """
         if account in self.friends.all():
@@ -70,7 +70,7 @@ class FriendRequest(models.Model):
         reciever_friendList = FriendList.objects.get(user=self.reciever)
         if reciever_friendList:
             reciever_friendList.add_friend(self.sender)
-            sender_friendList = FriendList.objects.get(user=self.reciever)
+            sender_friendList = FriendList.objects.get(user=self.sender)
             if sender_friendList:
                 sender_friendList.add_friend(self.reciever)
                 self.is_active = False

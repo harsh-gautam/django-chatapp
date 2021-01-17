@@ -89,8 +89,8 @@ def account_view(request, *args, **kwargs):
         try:
             friend_list = FriendList.objects.get(user=account)
         except FriendList.DoesNotExist:
-             friend_list = FriendList(user=account)
-             friend_list.save()
+            friend_list = FriendList(user=account)
+            friend_list.save()
         friends = friend_list.friends.all()  # Get all the friends from user's friend list
         context["friends"] = friends
 
@@ -133,7 +133,8 @@ def account_view(request, *args, **kwargs):
         context['is_friend'] = is_friend
         context['friend_requests'] = friend_requests
         context['request_sent'] = request_sent
-
+    print(type(context))
+    print(context)
     return render(request, 'account/account.html', context)
 
 

@@ -11,7 +11,9 @@
         width: 400px;
     }
 </style>
-
+{% for key, value in context.items %}
+    <h3>{{key}}</h3><h1>{{value}}</h1>
+{% endfor %}
 <div class="d-flex flex-row">
     <div class="card  profile-card">
         <div class="card-header">Profile</div>
@@ -61,7 +63,8 @@
                 {% for friend_req in friend_requests %}
                 <div class="d-flex flex-column">
                     <div id="{{ friend_req.id }}">{{ friend_req.sender }}
-                        <a href="#"> accept </a> <a href="#"> decline</a>
+                        <a class="id_acceptFriendReqBtns" href="#"> accept </a>
+                        <a class="id_declineFriendReqBtns" href="#"> decline</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -97,7 +100,9 @@
                     <div class="card-body">
                         <div class="d-flex flex-row">
                             <div id="{{ pending_friend_req_id }}">
-                                <a href="#"> accept </a> <a href="#"> decline</a>
+                                Accept Friend Request?
+                                <a id="id_acceptFriendReqBtn" href="#"> accept </a> 
+                                <a id="id_acceptFriendReqBtn" href="#"> decline</a>
                             </div>
                         </div>
                     </div>
@@ -113,19 +118,31 @@
 
 {% block script %}
 <script>
+
+    const ACCEPT_REQ_URL = "{% url 'friends:accept-friend-req' %}"
+    const SEND_REQ_URL = "{% url 'friends:send-friend-req' %}"
+
     function handleEditImage() {
-    < !--TODO -->
+    // TODO
             alert('This feature will be implemented soon')
     }
+
     let sendFriendRequestBtn = document.getElementById("id_sendFriendReqBtn")
     if (sendFriendRequestBtn != null) {
         sendFriendRequestBtn.addEventListener("click", function () {
             csrfToken = "{{ csrf_token }}"
-            sendFriendRequest({{ id }}, csrfToken, onFriendRequestSent)
+            sendFriendRequest(SEND_REQ_URL, {{ id }}, csrfToken, onFriendRequestSent)
     })
     }
 
-
+    // In case of accepting friend req by visiting other user's profile
+    let acceptFriendRequestBtn = document.getElementById("id_acceptFriendReqBtn")
+    if (acceptFriendRequestBtn != null) {
+        acceptFriendRequestBtn.addEventListener("click", function () {
+            let id = this.parentNode.id
+            acceptFriendRequest(ACCEPT_REQ_URL, id, onFriendRequestAccept)
+    })
+    }
 </script>
 
 <script src="{% static 'account/js/main.js' %}"></script>
