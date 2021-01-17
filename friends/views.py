@@ -4,6 +4,48 @@ import json
 from account.models import Account
 from friends.models import FriendList, FriendRequest
 
+def friend_list_view(request, *args, **kwargs):
+    user = request.user
+    context = {"error": ""}
+    if user.is_authenticated:
+        user_id = kwargs.get('user_id')
+        if user_id:
+            try:
+                this_user = Account.objects.get(pk=user_id)
+                context['this_user'] = this_user
+            except Account.DoseNotExist:
+                context['error'] = "User does not exists"
+            
+            try:
+                this_user_friend_list = FriendList.objects.get(user=this_user)
+            except:
+                context['error'] = f"Could not find friend list of user {this_user.username}"
+
+            # The authenticated user is not viewing his friend list
+            friends = []
+            if user != this_user:
+                if user in this_user_friend_list.friends.all():
+                    auth_user_friend_list = FriendList.objects.get(user=user)
+                    
+                    for friend in this_user_friend_list.friends.all():
+                        if auth_user_friend_list.is_mutual_friend(friend):
+                            friends.append(friend)
+                    context['friends'] = friends
+                else:
+                    context['error'] = "You must be friends to  view friend list."
+            else:
+                for friend in this_user_friend_list.friends.all():
+                    friends.append(friend)
+                context["friends"] = friends
+
+    else:
+        context['error'] = "You must be authenticated to view others friend list."
+
+    return render(request, "friends/friends_list.html", context)
+
+
+
+# APIs
 def send_friend_request(request, *args, **kwargs):
 
     user = request.user

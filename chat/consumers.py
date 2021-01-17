@@ -4,7 +4,7 @@ from channels.db import database_sync_to_async
 from django.db.models import F
 from django.contrib.auth.models import User
 
-from chat.models import Message, ChatRoom
+from chat.models import ChatRoomMessage, ChatRoom
 # from chat.utils import get_last_10_messages
 import json
 

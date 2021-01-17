@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Friend List
+{% endblock title %}
+
+{% block body %}
+
+<div class="container">
+<div class="card">
+<div class="card-header">Mutual Friends</div>
+    <div class="card-body">
+        <div class="row d-flex flow-column">
+        {% if error %}
+            <h3>{{ error }}</h3>
+        {% else %}
+            {% for friend in friends %}
+            <div class="col-6">
+                <a href="{% url 'account:profile' user_id=friend.id %}">{{ friend.name|capfirst }}</a> ({{friend.username}})
+            </div>
+            {% endfor %}
+        {% endif %}
+            
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock body %}

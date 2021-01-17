@@ -54,7 +54,7 @@
         {% if is_self %}
         <div class="card ms-4 mb-2">
             <div class="card-body">
-                <h3><a href="#">Friends ({{ friends|length }})</a></h3>
+                <h3><a href="{% url 'friends:friend-list' user_id=id %}">Friends ({{ friends|length }})</a></h3>
             </div>
         </div>
         <div class="card ms-4 mb-2">
@@ -75,7 +75,7 @@
             {% if is_friend %}
             <div class="card ms-4 mb-2">
             <div class="card-body">
-                <h3><a href="#">Friends ({{ friends|length }})</a></h3>
+                <h3><a href="{% url 'friends:friend-list' user_id=id %}">Friends ({{ friends|length }})</a></h3>
             </div>
         </div>
             <div class="card ms-4 mb-2">
@@ -178,5 +178,5 @@
 </script>
 
 <script src="{% static 'account/js/main.js' %}"></script>
-<script src="{% static 'account/js/send_friend_request.js' %}"></script>
+<script src="{% static 'account/js/friend_request_status.js' %}"></script>
 {% endblock script %}

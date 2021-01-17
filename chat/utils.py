@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from chat.models import ChatRoom, Contact, Message
+# from chat.models import ChatRoom, Contact, Message
 
 def get_last_10_messages(roomObj):
     return Message.objects.by_room(roomObj)
