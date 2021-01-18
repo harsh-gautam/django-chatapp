@@ -13,7 +13,7 @@
 <div class="container my-2">
     <div class="row">
         <div class="card col-8 px-0">
-            <div class="card-header">{{ room_name }}</div>
+            <div class="card-header">{{ room_title }}</div>
             <div class="card-body mx-auto">
                 <div id="chat-area" class="overflow-auto">
                     <!-- <p class="d-flex justify-content-end  mb-2">
@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="card col-3 px-0">
-            <div class="card-header">Users:</div>
+            <div class="card-header">Connected Users:</div>
             <div class="card-body users">
                 {% for user in users %}
                 <ul class="list-group">
@@ -59,16 +59,22 @@
     }
 
 
-    let room = '{{ room_name }}';
-    let user = '{{ username }}';
+    let room = '{{ room_title }}';
+    let user = '{{ request.user }}';
     console.log(`User -> ${user}`)
     url = `ws://${window.location.host}/ws/chat/room/${room}/`;
     //console.log(url)
     const socket = new WebSocket(url);
 
     socket.onopen = function open() {
+        console.log('WebSocket Connection Open.');
+        //if("{{request.user.is_authenticated}}"){
+        //    socket.send(JSON.stringify({
+        //        "command": "join",
+        //    }));
+        //}
         loadMessages();
-        console.log('WebSockets connection created.');
+        
     }
 
     if (socket.readyState == WebSocket.OPEN) {
@@ -77,6 +83,10 @@
 
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
+
+        if(data['command'] === "connected_users"){
+            setConnectedUsersCount(data['connected_users'])
+        }
         // console.log(data)
         if(data['command'] === "load_messages"){
             for(let i=0; i<data['messages'].length; i++){
@@ -86,17 +96,15 @@
             create_message(data['message']);
         }
 
-        if(data['command'] === 'connected_users'){
-            set_connected_users(data['connected_users'])
-        }
     };
 
     function create_message(data){
         let message = data['content'];
-        let author = data['author'];
+        let author = data['user'];
 
         let p_tag = document.createElement('p');
         p_tag.classList.add('my-2', 'bg-secondary', 'p-2');
+
         let span_name = document.createElement('span');
         span_name.classList.add("mx-2");
         
@@ -129,6 +137,10 @@
         console.log('WebSocket Error: ' + e);
     };
 
+    socket.onclose = function (e) {
+        console.log('WebSocket Closed: ' + e);
+    };
+
     sendBtn = document.querySelector("#send-btn");
     inputDOM = document.querySelector("#message")
 
@@ -152,10 +164,10 @@
         socket.send(JSON.stringify({'command': 'load_messages' }));
     }
 
-    function set_connected_users(users_list){
+    function setConnectedUsersCount(users_count){
         users_box = document.querySelector('.users')
-        //users_box.innerHTML += 
-        console.log(users_list)
+        users_box.innerHTML += users_count
+        console.log(users_count)
     }
 </script>
 

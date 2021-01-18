@@ -26,7 +26,5 @@ urlpatterns = [
     path('chat/', include('chat.urls', namespace="chat")),
     path('friends/', include('friends.urls', namespace="friends")),
 
-    path('createroom/', views.createroom, name="create room"),
-    path('joinroom/', views.joinroom, name="create room"),
     path('search/', search_view, name="search"),    
 ]

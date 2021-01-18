@@ -3,14 +3,14 @@
 {% block body %}
     <h1>Welcome to ChatRoom</h1>
     {% if user.is_authenticated %}
-    <form action="/createroom/" method="post" class="form-group mb-2">{% csrf_token %}
-    <input type="text" class="form-control mb-1" name="roomName" placeholder="Create a room">
-    <button type="submit" class="btn btn-primary">Create Room</button>
+    <form action="/chat/createroom/" method="post" class="form-group mb-2">{% csrf_token %}
+        <input type="text" class="form-control mb-1" name="roomName" placeholder="Create a room">
+        <button type="submit" class="btn btn-primary">Create Room</button>
     </form>
     <h3>or</h3>
-    <form action="/joinroom" method="get" class="form-group mb-2">
-    <input type="text" class="form-control mb-1" name="join" placeholder="Join a room">
-    <button type="submit" class="btn btn-primary">Join Room</button>
+    <form action="/chat/joinroom" method="get" class="form-group mb-2">
+        <input type="text" class="form-control mb-1" name="join" placeholder="Join a room">
+        <button type="submit" class="btn btn-primary">Join Room</button>
     </form>
     {% else %}
     <h1>You must be logged in to use the chat app</h1>
