@@ -79,8 +79,8 @@
         if(messages != null && messages != undefined && messages != "None"){
             setPageNumber(page_number);
             messages.forEach(message => {
-                create_message(message, true, false)
-                scrollDown();
+                create_message(message, true)
+                
             });
         }
         else{
@@ -136,12 +136,12 @@
             //    create_message(data['messages'][i]);
             //}
         } else if(data['command'] === "new_message"){
-            create_message(data['message']);
+            create_message(data['message'], true);
         }
 
     };
 
-    function create_message(data, isNewMessage, maintainPosition){
+    function create_message(data, isNewMessage){
         let message = data['content'];
         let author = data['user'];
 
