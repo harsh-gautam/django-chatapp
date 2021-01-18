@@ -2,8 +2,6 @@ from django.shortcuts import render, redirect, Http404, HttpResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse
-from chat.utils import find_room_or_error
 from chat.models import ChatRoom
 from account.models import Account
 

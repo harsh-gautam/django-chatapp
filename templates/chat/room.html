@@ -15,6 +15,7 @@
         <div class="card col-8 px-0">
             <div class="card-header">{{ room_title }}</div>
             <div class="card-body mx-auto">
+            <span class="invisible" id="page_number">1</span>
                 <div id="chat-area" class="overflow-auto">
                     <!-- <p class="d-flex justify-content-end  mb-2">
                         <span class="">This is right</span><span class="mx-2">: Harsh </span>
@@ -52,11 +53,52 @@
 {% block script %}
 <script src="{% static 'js/reconnecting-websocket.js' %}"></script>
 <script>
+
+    function setPaginationExhausted(){
+        setPageNumber("-1");
+    }
+
+    
+    function getPreviousChatMessages(){
+        let page_number = document.getElementById('page_number').innerHTML;
+        if(page_number != -1){
+            setPageNumber("-1"); // Loading spinner
+            socket.send(JSON.stringify({
+                "command": "load_messages",
+                "page_number": page_number,
+            }));
+        }
+
+    }
+
+    function setPageNumber(pageNumber){
+		document.getElementById("page_number").innerHTML = pageNumber
+	}
+
+    function handleLoadMessageEvent(messages, page_number){
+        if(messages != null && messages != undefined && messages != "None"){
+            setPageNumber(page_number);
+            messages.forEach(message => {
+                create_message(message, true, false)
+                scrollDown();
+            });
+        }
+        else{
+            setPaginationExhausted();
+        }
+    }
+
     chatWindow = document.getElementById('chat-area');
     function scrollDown(){
         var xH = chatWindow.scrollHeight; 
         chatWindow.scrollTo(0, xH);
     }
+
+    chatWindow.addEventListener("scroll", function(){
+        if(Math.abs(chatWindow.scrollTop) == 0){
+            getPreviousChatMessages();
+        }
+    });
 
 
     let room = '{{ room_title }}';
@@ -73,7 +115,7 @@
         //        "command": "join",
         //    }));
         //}
-        loadMessages();
+        getPreviousChatMessages();
         
     }
 
@@ -89,16 +131,17 @@
         }
         // console.log(data)
         if(data['command'] === "load_messages"){
-            for(let i=0; i<data['messages'].length; i++){
-                create_message(data['messages'][i]);
-            }
+            handleLoadMessageEvent(data['messages'], data['page_number'])
+            //for(let i=0; i<data['messages'].length; i++){
+            //    create_message(data['messages'][i]);
+            //}
         } else if(data['command'] === "new_message"){
             create_message(data['message']);
         }
 
     };
 
-    function create_message(data){
+    function create_message(data, isNewMessage, maintainPosition){
         let message = data['content'];
         let author = data['user'];
 
@@ -128,9 +171,13 @@
             p_tag.appendChild(span_name);
             p_tag.appendChild(span_msg);
         }
-
-        document.querySelector('#chat-area').appendChild(p_tag);
-        scrollDown();
+        if(isNewMessage){
+            document.querySelector('#chat-area').insertBefore(p_tag, chatWindow.firstChild)
+        }
+        else{
+            document.querySelector('#chat-area').appendChild(p_tag);
+            scrollDown();
+        }
     }
 
     socket.onerror = function (e) {
@@ -148,8 +195,7 @@
         message = inputDOM.value;
         username = user;
         command = "new_message"
-        room = "{{ room_name }}"
-        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command, 'room': room }));
+        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command }));
         inputDOM.value = "";
         
     });

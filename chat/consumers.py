@@ -2,10 +2,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
 from django.db.models import F
+from django.core.paginator import Paginator
 
 from chat.models import ChatRoomMessage, ChatRoom
+from chat.utils import calculate_timestamp
 from account.models import Account
-# from chat.utils import get_last_10_messages
 import json
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
@@ -39,11 +40,20 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def load_messages(self, data):
         print("INSIDE LOAD MESSAGES")
         # messages = sync_to_async(self.get_messages()
-        messages = await self.get_messages(self.room)
-        content = {
-            'command': 'load_messages',
-            'messages': await self.messages_to_json(messages),
-        }
+        payload = await self.get_messages(self.room, data['page_number'])
+        if payload['messages'] != None:
+            content = {
+                'command': 'load_messages',
+                'messages': await self.messages_to_json(payload['messages']),
+                'page_number': payload['page_number']
+            }
+        else:
+            content = {
+                'command': 'load_messages',
+                'messages': None,
+                'page_number': payload['page_number']
+            }
+        # print("DATA ENCODED: ", content)
         await self.send_loaded_messages(content)
 
 
@@ -58,7 +68,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
             'command': 'new_message',
             'message': await self.message_to_json(created_message),
         }
-        print("Content Loaded to Send: ", content)
+        # print("Content Loaded to Send: ", content)
         await self.send_chat_message(content)
 
     async def messages_to_json(self, messages):
@@ -70,9 +80,11 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
 
     async def message_to_json(self, message):
         return{
+            'user_id': message.user.id,
             'user': message.user.username,
+            'msg_id': message.id,
             'content': message.content,
-            'timestamp': str(message.timestamp)
+            'timestamp': calculate_timestamp(message.timestamp),
         }
 
     
@@ -138,9 +150,17 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     """
 
     @database_sync_to_async
-    def get_messages(self, room):
-        # return Message.objects.order_by('-timestamp').all()[:10]
-        return reversed(ChatRoomMessage.get_room_messages(room))
+    def get_messages(self, room, page_number):
+        queryset = ChatRoomMessage.objects.filter(room=room).order_by("-timestamp")
+        p = Paginator(queryset, 15)
+        page_number = int(page_number)
+        payload = {}
+        if page_number <= p.num_pages:
+            payload["messages"] = p.page(page_number).object_list
+        else:
+            payload["messages"] = None
+        payload["page_number"] = page_number + 1
+        return payload
     
     @database_sync_to_async
     def create_message(self, user, message, room):

@@ -43,7 +43,7 @@ class ChatRoomMessage(models.Model):
         return self.content[:20] + " by " + self.user.username
 
     def get_room_messages(self, room):
-        qs = self.objects.filter(room=room).order_by("-timestamp")
+        qs = ChatRoomMessage.objects.filter(room=room).order_by("-timestamp")
         return qs
 
     

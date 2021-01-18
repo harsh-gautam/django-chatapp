@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, Http404, HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from chat.utils import find_room_or_error
 
 from account.models import Account
 
@@ -42,20 +41,4 @@ def register(request):
         user.save()
         return redirect('/')
     return render(request, 'signup.html')
-
-def createroom(request):
-    if request.method == "POST":
-        room = request.POST['roomName']
-        return redirect(f'/chat/room/{room}')
-    return Http404("Page Not Found")
-
-
-def joinroom(request):
-    room_name = request.GET['join']
-    room_exist = find_room_or_error(room_name)
-    print(room_exist)
-    if room_exist is not None:
-        return redirect(f'/chat/room/{room_name}')
-    else:
-        return Http404("ROOM NOT FOUND")
 
