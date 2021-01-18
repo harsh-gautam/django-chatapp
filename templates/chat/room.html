@@ -79,7 +79,7 @@
         if(messages != null && messages != undefined && messages != "None"){
             setPageNumber(page_number);
             messages.forEach(message => {
-                create_message(message, true)
+                create_message(message, false)
                 
             });
         }
@@ -171,7 +171,7 @@
             p_tag.appendChild(span_name);
             p_tag.appendChild(span_msg);
         }
-        if(isNewMessage){
+        if(!isNewMessage){
             document.querySelector('#chat-area').insertBefore(p_tag, chatWindow.firstChild)
         }
         else{
@@ -212,7 +212,7 @@
 
     function setConnectedUsersCount(users_count){
         users_box = document.querySelector('.users')
-        users_box.innerHTML += users_count
+        users_box.innerHTML = users_count
         console.log(users_count)
     }
 </script>

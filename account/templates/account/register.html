@@ -71,6 +71,6 @@
             <button class="btn btn-primary" type="submit">Sign Up</button>
         </div>
     </form>
-    <p>Already have an account? <a href="/login">Log in!</a></p>
+    <p>Already have an account? <a href="{% url 'account:login' %}">Log in!</a></p>
 </div>
 {% endblock body %}
