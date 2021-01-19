@@ -1,13 +1,13 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
-from django.db.models import F
 from django.core.paginator import Paginator
 
 from chat.models import ChatRoomMessage, ChatRoom
 from chat.utils import calculate_timestamp
 from account.models import Account
 import json
+import time
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
 
@@ -19,7 +19,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         
         # await self.update_user_status_incr(self.scope['user'])  # increment the user's online count
         # Join group
-        print("Websocket Group Name: ",self.group_name)
+        
 
         await self.channel_layer.group_add(
             self.group_name,
@@ -27,7 +27,9 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
-
+        print("Connected Websocket Group Name: ",self.group_name)
+        user = await self.get_user(self.scope['user'])
+        await self.connect_user(user)
         participants = await self.get_num_connected_users(self.room_title)
         await self.channel_layer.group_send(
             self.group_name,
@@ -38,27 +40,28 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         )
 
     async def load_messages(self, data):
-        print("INSIDE LOAD MESSAGES")
+
         # messages = sync_to_async(self.get_messages()
+        await self.send(text_data=json.dumps({'command': 'show_spinner',}))
         payload = await self.get_messages(self.room, data['page_number'])
         if payload['messages'] != None:
             content = {
                 'command': 'load_messages',
                 'messages': await self.messages_to_json(payload['messages']),
-                'page_number': payload['page_number']
+                'new_page_number': payload['new_page_number']
             }
         else:
             content = {
                 'command': 'load_messages',
                 'messages': None,
-                'page_number': payload['page_number']
+                'new_page_number': payload['new_page_number']
             }
-        # print("DATA ENCODED: ", content)
+        
         await self.send_loaded_messages(content)
 
 
     async def new_message(self, data):
-        print("RECEIVED DATA AT NEW_MESSAGE")
+        
         sender = data['from']
         message = data['message']
         user = await self.get_user(sender)
@@ -68,7 +71,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
             'command': 'new_message',
             'message': await self.message_to_json(created_message),
         }
-        # print("Content Loaded to Send: ", content)
+        
         await self.send_chat_message(content)
 
     async def messages_to_json(self, messages):
@@ -88,26 +91,10 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         }
 
     
-    commands = {
-        'load_messages': load_messages,
-        'new_message': new_message
-    }
-
-
-
-    
     async def disconnect(self, close_code):
         # await self.update_user_status_decr(self.scope['user'])  
-
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
-        participants = await self.get_num_connected_users(self.room_title)
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                'type': 'connected_users_count',
-                'connected_users': participants
-            }
-        )
+        await self.leave_room(close_code)
+        
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -116,7 +103,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     
     
     async def send_chat_message(self, message):
-        print("INSIDE SEND_CHAT_MESSAGE CALLED BY NEW_MESSAGE")
+        
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -130,11 +117,27 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
 
 
     async def chat_message(self, event):
-        print("INSIDE CHAT_MESSAGE")
+        print("SENDING MESSAGE TO CLIENT")
         message = event['message']
         await self.send(text_data=json.dumps(message))
-        print("MESSAGE SEND TO WEBSOCKET")
 
+    async def leave_room(self, data):
+        user = await self.get_user(self.scope['user'])
+        await self.disconnect_user(user)
+        participants = await self.get_num_connected_users(self.room_title)
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type': 'connected_users_count',
+                'connected_users': participants
+            }
+        )
+
+        self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+        
 
     async def connected_users_count(self, event):
         print("ChatConsumer: connected_user_count: count: ", str(event['connected_users']))
@@ -144,22 +147,35 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         }
         await self.send(text_data=json.dumps(data))
 
-
+    commands = {
+        'load_messages': load_messages,
+        'new_message': new_message,
+        'leave_room': leave_room,
+    }
     """
     DATABASE OPERATIONS
     """
 
     @database_sync_to_async
+    def connect_user(self, user):
+        return self.room.connect_user(user)
+
+    @database_sync_to_async
+    def disconnect_user(self, user):
+        return self.room.disconnect_user(user)
+
+    @database_sync_to_async
     def get_messages(self, room, page_number):
         queryset = ChatRoomMessage.objects.filter(room=room).order_by("-timestamp")
-        p = Paginator(queryset, 15)
+        p = Paginator(queryset, 12)
+
         page_number = int(page_number)
         payload = {}
         if page_number <= p.num_pages:
             payload["messages"] = p.page(page_number).object_list
         else:
             payload["messages"] = None
-        payload["page_number"] = page_number + 1
+        payload["new_page_number"] = page_number + 1
         return payload
     
     @database_sync_to_async

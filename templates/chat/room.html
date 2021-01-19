@@ -13,10 +13,11 @@
 <div class="container my-2">
     <div class="row">
         <div class="card col-8 px-0">
-            <div class="card-header">{{ room_title }}</div>
-            <div class="card-body mx-auto">
+            <div class="card-header">{{ room_title }}<span style="float: end;"><button onclick="leaveRoom()">Leave Room</button></span></div>
+            <div class="card-body text-center mx-auto">
             <span class="invisible" id="page_number">1</span>
-                <div id="chat-area" class="overflow-auto">
+                <div class="spinner invisible spinner-border mx-auto"><span class="visually-hidden">Loading...</span></div>
+                <div id="chat-area" class="overflow-auto py-3">
                     <!-- <p class="d-flex justify-content-end  mb-2">
                         <span class="">This is right</span><span class="mx-2">: Harsh </span>
                     </p>
@@ -53,6 +54,20 @@
 {% block script %}
 <script src="{% static 'js/reconnecting-websocket.js' %}"></script>
 <script>
+    var spinner = document.querySelector('.spinner')
+    var chatWindow = document.getElementById('chat-area');
+    function scrollDown(){
+        let xH = chatWindow.scrollHeight; 
+        chatWindow.scrollTo(0, xH);
+    }
+
+    function leaveRoom(){
+        socket.send(JSON.stringify({
+            "command": "leave_room",
+            "data": "",
+        }));
+        window.location.replace("http://" + window.location.host);
+    }
 
     function setPaginationExhausted(){
         setPageNumber("-1");
@@ -62,11 +77,16 @@
     function getPreviousChatMessages(){
         let page_number = document.getElementById('page_number').innerHTML;
         if(page_number != -1){
-            setPageNumber("-1"); // Loading spinner
+            setPageNumber("-1");
+            chatWindow.scrollTo(0, 50);
             socket.send(JSON.stringify({
                 "command": "load_messages",
                 "page_number": page_number,
             }));
+            if (page_number == -1){
+                
+            }
+            
         }
 
     }
@@ -82,16 +102,11 @@
                 create_message(message, false)
                 
             });
+            toggleSpinner();
         }
         else{
             setPaginationExhausted();
         }
-    }
-
-    chatWindow = document.getElementById('chat-area');
-    function scrollDown(){
-        var xH = chatWindow.scrollHeight; 
-        chatWindow.scrollTo(0, xH);
     }
 
     chatWindow.addEventListener("scroll", function(){
@@ -103,19 +118,15 @@
 
     let room = '{{ room_title }}';
     let user = '{{ request.user }}';
-    console.log(`User -> ${user}`)
     url = `ws://${window.location.host}/ws/chat/room/${room}/`;
-    //console.log(url)
+
     const socket = new WebSocket(url);
 
     socket.onopen = function open() {
         console.log('WebSocket Connection Open.');
-        //if("{{request.user.is_authenticated}}"){
-        //    socket.send(JSON.stringify({
-        //        "command": "join",
-        //    }));
-        //}
+        chatWindow.scrollTo(0, chatWindow.scrollHeight);
         getPreviousChatMessages();
+
         
     }
 
@@ -126,15 +137,17 @@
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
 
+        if(data['command'] === 'show_spinner'){toggleSpinner();}
+        //if(data['command'] === 'stop_spinner'){hideSpinner();}
+
         if(data['command'] === "connected_users"){
             setConnectedUsersCount(data['connected_users'])
         }
-        // console.log(data)
+        
         if(data['command'] === "load_messages"){
-            handleLoadMessageEvent(data['messages'], data['page_number'])
-            //for(let i=0; i<data['messages'].length; i++){
-            //    create_message(data['messages'][i]);
-            //}
+            handleLoadMessageEvent(data['messages'], data['new_page_number'])
+
+
         } else if(data['command'] === "new_message"){
             create_message(data['message'], true);
         }
@@ -213,7 +226,10 @@
     function setConnectedUsersCount(users_count){
         users_box = document.querySelector('.users')
         users_box.innerHTML = users_count
-        console.log(users_count)
+    }
+
+    function toggleSpinner(){
+        spinner.classList.toggle('invisible')
     }
 </script>
 

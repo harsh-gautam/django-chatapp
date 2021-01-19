@@ -28,10 +28,10 @@ def create_room(request):
         except ChatRoom.DoesNotExist:
             room = ChatRoom(title=room_title)
             room.save()
-            room.connect_user(user_account)
         return redirect('chat:room', room_title=room.title)
     else:
         return HttpResponse("You must be logged in to create room.")
+          
             
 def join_room(request):
     user = request.user
@@ -40,12 +40,7 @@ def join_room(request):
         try:
             room = ChatRoom.objects.get(title=room_title)
             if room:
-                try:
-                    user_account = Account.objects.get(pk=user.id)
-                    room.connect_user(user_account)
-                    return redirect("chat:room", room_title=room.title)
-                except Exception as e:
-                    return HttpResponse(f"Something went wrong {e}")
+                return redirect("chat:room", room_title=room.title)
         except:
             return HttpResponse("Room does not exists.")
     else:
