@@ -7,5 +7,5 @@ from private_chat.views import (
 app_name = "private_chat"
 
 urlpatterns = [
-    path("room/<str:room_title>/", private_chat_room, name="private-chat-room")
+    path("room/<str:room_title>/", private_chat_room_view, name="private-chat-room")
 ]
