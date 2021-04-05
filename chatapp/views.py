@@ -17,14 +17,14 @@ def handle_login(request):
                 login(request, user)
             else:
                 return HttpResponse("Wrong Credentials")
-            return redirect('/')
+            return redirect('home')
     except Exception as e:
         return HttpResponse("Some Error Occurred")
 
 
 def handle_logout(request):
     logout(request)
-    return redirect('/')
+    return redirect('home')
 
 def register(request):
     if request.method == "POST":
@@ -39,6 +39,6 @@ def register(request):
         user.name = name
         # user.last_name = lname
         user.save()
-        return redirect('/')
+        return redirect('home')
     return render(request, 'signup.html')
 
