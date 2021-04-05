@@ -19,7 +19,7 @@ application = ProtocolTypeRouter(
                             ChatRoomConsumer.as_asgi(),
                         ),
                         re_path(
-                            r"^ws/privatechat/room/(?P<room_title>\w+)/$",
+                            r"^ws/private/chat/(?P<room_title>\w+)/$",
                             PrivateChatConsumer.as_asgi(),
                         ),
                     ]
