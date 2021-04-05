@@ -118,7 +118,7 @@
 
     let room = '{{ room_title }}';
     let user = '{{ request.user }}';
-    url = `ws://${window.location.host}/ws/chat/room/${room}/`;
+    url = `ws://${window.location.host}/ws/private-chat/room/${room}/`;
 
     const socket = new WebSocket(url);
 
