@@ -1,11 +1,18 @@
 from django.db import models
 from django.conf import settings
 
+from private_chat.utils import find_or_create_private_chat
+
 AUTH_USER_MODEL = settings.AUTH_USER_MODEL
 
+
 class FriendList(models.Model):
-    user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user")
-    friends = models.ManyToManyField(AUTH_USER_MODEL, related_name="friends", blank=True)
+    user = models.OneToOneField(
+        AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user"
+    )
+    friends = models.ManyToManyField(
+        AUTH_USER_MODEL, related_name="friends", blank=True
+    )
 
     def __str__(self):
         return self.user.username
@@ -18,6 +25,12 @@ class FriendList(models.Model):
         if not account in self.friends.all():
             self.friends.add(account)
 
+            # creating a private chat or activate an old one
+            chat = find_or_create_private_chat(self.user, account)
+            if not chat.is_active:
+                chat.is_active = True
+                chat.save()
+
     def remove_friend(self, account):
         """
         Remove a friend, helper for unfriend
@@ -26,13 +39,19 @@ class FriendList(models.Model):
         if account in self.friends.all():
             self.friends.remove(account)
 
+            # deativate the chat
+            chat = find_or_create_private_chat(self.user, account)
+            if chat.is_active:
+                chat.is_active = False
+                chat.save()
+
     def unfriend(self, removee):
         """
         To unfriend someone we need to remove the removee from our friendlist and ourself from removee's friendlist
         param -> removee: the user to remove from friendlist
         """
 
-        me = self  # the person who is removing 
+        me = self  # the person who is removing
 
         me.remove_friend(removee)
 
@@ -54,8 +73,12 @@ class FriendRequest(models.Model):
         RECIEVER: the person receiving friend request
     """
 
-    sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sender")
-    reciever = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reciever")
+    sender = models.ForeignKey(
+        AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sender"
+    )
+    reciever = models.ForeignKey(
+        AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reciever"
+    )
 
     is_active = models.BooleanField(blank=False, null=False, default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -75,7 +98,7 @@ class FriendRequest(models.Model):
                 sender_friendList.add_friend(self.reciever)
                 self.is_active = False
                 self.save()
-    
+
     def decline(self):
         """
         Decline a friend request -> from reciever's perpective
