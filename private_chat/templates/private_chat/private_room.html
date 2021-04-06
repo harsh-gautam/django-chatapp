@@ -33,13 +33,16 @@
             </div>
         </div>
         <div class="card col-3 px-0">
-            <div class="card-header">Connected Users:</div>
+            <div class="card-header">Friends:</div>
             <div class="card-body chats">
-                {% for user in users %}
-                <ul class="list-group">
-                    <li class="list-group-item">{{ user.username|escape }}: {{ user.status|default:'Offline' }}</li>
-                </ul>
+              <ul class="list-group">
+                {% for x in m_from_f %}
+                    <li class="list-group-item" id="friend_{{ x.friend.id }}">
+                      <span class="username-span">{{ x.friend.username }}</span>
+                      <span class="message-span">{{ x.message|truncatechars:20 }}</span>
+                    </li>
                 {% endfor %}
+              </ul>
             </div>
         </div>
     </div>
