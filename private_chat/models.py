@@ -12,17 +12,25 @@ class PrivateChatRoom(models.Model):
 
     def __str__(self):
         return f"{self.user1.username}-{self.user2.username}"
-    
+
     @property
     def group_name(self):
-        return f"PrivateChatRoom-{self.pk}"
-    
+        return f"PrivateChatRoom-{self.id}"
+
+
+class PrivateChatMessageManager(models.Manager):
+    def by_room(self, room):
+        qs = PrivateChatMessage.objects.filter(room=room).order_by("-timestamp")
+        return qs
+
 
 class PrivateChatMessage(models.Model):
     user = models.ForeignKey(AUTH_USER, on_delete=models.CASCADE)
     room = models.ForeignKey(PrivateChatRoom, on_delete=models.CASCADE)
     content = models.TextField(blank=False, unique=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    objects = PrivateChatMessageManager()
 
     def __str__(self):
         return self.content[:15] + " by " + self.user.username
