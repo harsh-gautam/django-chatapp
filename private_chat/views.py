@@ -6,5 +6,6 @@ def private_chat_room_view(request, *args, **kwargs):
 
     if not user.is_authenticated:
         return redirect("account:login")
+        
     context = {"room_title": kwargs.get("room_title")}
     return render(request, "private_chat/private_room.html", context)
