@@ -7,11 +7,28 @@ AUTH_USER = settings.AUTH_USER_MODEL
 class PrivateChatRoom(models.Model):
     user1 = models.ForeignKey(AUTH_USER, related_name="user1", on_delete=models.CASCADE)
     user2 = models.ForeignKey(AUTH_USER, related_name="user2", on_delete=models.CASCADE)
-
+    connected_users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="connected_users")
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user1.username}-{self.user2.username}"
+    
+    def connect_user(self, user):
+      is_user_added = False
+      if not user in self.connected_users.all():
+        self.connected_users.add(user)
+        is_user_added = True
+      return is_user_added
+
+    def disconnect_user(self, user):
+      """
+      return true if user is removed from connected_users list
+      """
+      is_user_removed = False
+      if user in self.connected_users.all():
+        self.connected_users.remove(user)
+        is_user_removed = True
+      return is_user_removed
 
     @property
     def group_name(self):

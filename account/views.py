@@ -6,6 +6,8 @@ from account.models import Account
 from friends.models import FriendRequest, FriendList
 from friends.utils import FriendReqStatus, get_friend_req_or_false
 
+from private_chat.models import PrivateChatRoom
+
 # TODOs : implement image crop and upload image logic
 
 def default_view(request):
@@ -99,35 +101,50 @@ def account_view(request, *args, **kwargs):
         friend_requests = None
 
         if user.is_authenticated and user != account:
-            is_self = False
+          is_self = False
 
-            if friends.filter(pk=user.id): # Is the viewer watching other user is in his/her friend list?
-                is_friend = True
-
-            else:
-                is_friend = False
-                
-                # CASE 1: You send friend request
-                if get_friend_req_or_false(user, account) != False:
-                    request_sent = FriendReqStatus.YOU_SEND_REQUEST.value
-                    
-                # CASE 2: You recieved friend request
-                elif get_friend_req_or_false(account, user) != False:
-                    request_sent = FriendReqStatus.YOU_RECIEVED_REQUEST.value
-                    context['pending_friend_req_id'] = get_friend_req_or_false(account, user).id
-                    
-                # CASE 3: No friend request send or recieved
+          if friends.filter(pk=user.id): # Is the viewer watching other user is in his/her friend list?
+            is_friend = True
+            try:
+              print("Trying first IF")
+              room = PrivateChatRoom.objects.filter(user1=user, user2=account, is_active=True)
+              if room.exists():
+                context["room_id"] = room[0].id
+              else:
+                room = PrivateChatRoom.objects.filter(user1=account, user2=user, is_active=True)
+                if room.exists():
+                  context["room_id"] = room[0].id
                 else:
-                    request_sent = FriendReqStatus.NO_REQUEST_SEND_OR_RECIEVED.value
-                    print("NO REQUEST: ", request_sent)
+                  room = PrivateChatRoom(user1=user, user2=account, is_active=True)
+                  room.save()
+                  context["room_id"] = room.id
+            except PrivateChatRoom.DoesNotExist:
+              pass
+              
+          else:
+            is_friend = False
+            
+          # CASE 1: You send friend request
+          if get_friend_req_or_false(user, account) != False:
+              request_sent = FriendReqStatus.YOU_SEND_REQUEST.value
+              
+          # CASE 2: You recieved friend request
+          elif get_friend_req_or_false(account, user) != False:
+              request_sent = FriendReqStatus.YOU_RECIEVED_REQUEST.value
+              context['pending_friend_req_id'] = get_friend_req_or_false(account, user).id
+              
+          # CASE 3: No friend request send or recieved
+          else:
+              request_sent = FriendReqStatus.NO_REQUEST_SEND_OR_RECIEVED.value
+              print("NO REQUEST: ", request_sent)
 
         elif not user.is_authenticated:
             is_self = False
         else:
-            try:
-                friend_requests = FriendRequest.objects.filter(reciever=user, is_active=True)
-            except:
-                pass
+          try:
+              friend_requests = FriendRequest.objects.filter(reciever=user, is_active=True)
+          except:
+              pass
 
         context['is_self'] = is_self
         context['is_friend'] = is_friend

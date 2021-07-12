@@ -1,239 +1,238 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Private_Chat
-{% endblock title %}
-
-{% block head %}
-<link rel="stylesheet" href="{% static 'css/room.css' %}">
-{% endblock head %}
-
-{% block body %}
+{% extends 'base.html' %} {% load static %} {% block title %}Private_Chat
+{%endblock title %} {% block head %}
+<link rel="stylesheet" href="{% static 'css/room.css' %}" />
+{% endblock head %} {% block body %}
 
 <div class="container my-2">
-    <div class="row">
-        <div class="card col-8 px-0">
-            <div class="card-header">{{ room_title }}</div>
-            <div class="card-body text-center mx-auto">
-            <span class="invisible" id="page_number">1</span>
-                <div class="spinner invisible spinner-border mx-auto"><span class="visually-hidden">Loading...</span></div>
-                <div id="chat-area" class="overflow-auto py-3">
-                    <!-- <p class="d-flex justify-content-end  mb-2">
+  <div class="row">
+    <div class="card col-8 px-0">
+      <div class="card-header">{{ room_title }}</div>
+      <div class="card-body text-center mx-auto">
+        <span class="invisible" id="page_number">1</span>
+        <div class="spinner invisible spinner-border mx-auto">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div id="chat-area" class="overflow-auto py-3">
+          <!-- <p class="d-flex justify-content-end  mb-2">
                         <span class="">This is right</span><span class="mx-2">: Harsh </span>
                     </p>
                     <p class="d-flex justify-content-start mb-2">
                         <span class="mx-2">Admin :</span><span class=""> This is left</span>
                     </p> -->
-                </div>
-                <!-- <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br> -->
-                <div class="row">
-                <div class="col-10"><input class="form-control" type="text" id="message"></div>
-                <div class="col-2"><input class="btn btn-primary" type="button" id="send-btn" value="SEND"></div>
-            </div>
-            </div>
         </div>
-        <div class="card col-3 px-0">
-            <div class="card-header">Friends:</div>
-            <div class="card-body chats">
-              <ul class="list-group">
-                {% for x in m_from_f %}
-                    <li class="list-group-item" id="friend_{{ x.friend.id }}">
-                      <span class="username-span">{{ x.friend.username }}</span>
-                      <span class="message-span">{{ x.message|truncatechars:20 }}</span>
-                    </li>
-                {% endfor %}
-              </ul>
-            </div>
+        <!-- <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br> -->
+        <div class="row">
+          <div class="col-10">
+            <input class="form-control" type="text" id="message" />
+          </div>
+          <div class="col-2">
+            <input
+              class="btn btn-primary"
+              type="button"
+              id="send-btn"
+              value="SEND"
+            />
+          </div>
         </div>
+      </div>
     </div>
+    <div class="card col-3 px-0">
+      <div class="card-header">Friends:</div>
+      <div class="card-body chats">
+        <ul class="list-group">
+          {% for x in m_from_f %}
+          <li class="list-group-item" id="friend_{{ x.friend.id }}">
+            <span class="username-span">{{ x.friend.username }}</span>
+            <span class="message-span">{{ x.message|truncatechars:20 }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>
 
-
-
-{% endblock body %}
-
-
-
-{% block script %}
+{% endblock body %} {% block script %}
 <script src="{% static 'js/reconnecting-websocket.js' %}"></script>
 <script>
-    var spinner = document.querySelector('.spinner')
-    var chatWindow = document.getElementById('chat-area');
-    function scrollDown(){
-        let xH = chatWindow.scrollHeight; 
-        chatWindow.scrollTo(0, xH);
+  var spinner = document.querySelector(".spinner");
+  var chatWindow = document.getElementById("chat-area");
+  function scrollDown() {
+    let xH = chatWindow.scrollHeight;
+    chatWindow.scrollTo(0, xH);
+  }
+
+  function leaveRoom() {
+    socket.send(
+      JSON.stringify({
+        command: "leave_room",
+        data: "",
+      })
+    );
+    window.location.replace("http://" + window.location.host);
+  }
+
+  function setPaginationExhausted() {
+    setPageNumber("-1");
+  }
+
+  function getPreviousChatMessages() {
+    let page_number = document.getElementById("page_number").innerHTML;
+    if (page_number != -1) {
+      setPageNumber("-1");
+      chatWindow.scrollTo(0, 50);
+      socket.send(
+        JSON.stringify({
+          command: "load_messages",
+          page_number: page_number,
+        })
+      );
+      if (page_number == -1) {
+      }
+    }
+  }
+
+  function setPageNumber(pageNumber) {
+    document.getElementById("page_number").innerHTML = pageNumber;
+  }
+
+  function handleLoadMessageEvent(messages, page_number) {
+    if (messages != null && messages != undefined && messages != "None") {
+      setPageNumber(page_number);
+      messages.forEach((message) => {
+        create_message(message, false);
+      });
+      toggleSpinner();
+    } else {
+      setPaginationExhausted();
+    }
+  }
+
+  chatWindow.addEventListener("scroll", function () {
+    if (Math.abs(chatWindow.scrollTop) == 0) {
+      getPreviousChatMessages();
+    }
+  });
+
+  let room_id = "{{ room_id }}";
+  let user = "{{ request.user }}";
+  url = `ws://${window.location.host}/ws/private-chat/room/${room_id}/`;
+
+  const socket = new WebSocket(url);
+  socket.addEventListener("open", (e) => {
+    console.log("Socket Open");
+  });
+
+  socket.onopen = function open() {
+    console.log("WebSocket Connection Open.");
+    // chatWindow.scrollTo(0, chatWindow.scrollHeight);
+    // getPreviousChatMessages();
+    socket.send(JSON.stringify({ room_id: room, command: "join_room" }));
+  };
+
+  if (socket.readyState == WebSocket.OPEN) {
+    socket.onopen();
+  }
+
+  socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+
+    if (data["command"] === "show_spinner") {
+      toggleSpinner();
+    }
+    //if(data['command'] === 'stop_spinner'){hideSpinner();}
+
+    if (data["command"] === "connected_users") {
+      setConnectedUsersCount(data["connected_users"]);
     }
 
-    function leaveRoom(){
-        socket.send(JSON.stringify({
-            "command": "leave_room",
-            "data": "",
-        }));
-        window.location.replace("http://" + window.location.host);
+    if (data["command"] === "load_messages") {
+      handleLoadMessageEvent(data["messages"], data["new_page_number"]);
+    } else if (data["command"] === "new_message") {
+      create_message(data["message"], true);
     }
+  };
+  socket.onerror = function (e) {
+    console.log("WebSocket Error: ");
+    console.log(e);
+  };
 
-    function setPaginationExhausted(){
-        setPageNumber("-1");
+  socket.onclose = function (e) {
+    console.log("WebSocket Closed: ");
+    console.log(e);
+  };
+
+  function create_message(data, isNewMessage) {
+    let message = data["content"];
+    let author = data["user"];
+
+    let p_tag = document.createElement("p");
+    p_tag.classList.add("my-2", "bg-secondary", "p-2");
+
+    let span_name = document.createElement("span");
+    span_name.classList.add("mx-2");
+
+    let span_msg = document.createElement("span");
+    span_msg.innerText = message;
+    span_msg.classList.add("text-break");
+
+    if (author === user) {
+      p_tag.classList.add("send");
+      span_name.classList.add("text-info");
+      span_msg.classList.add("text-end");
+      span_name.innerText = " : " + author;
+      // span_name.classList.add("rtl");
+      // span_msg.classList.add("rtl");
+      p_tag.appendChild(span_msg);
+      p_tag.appendChild(span_name);
+    } else {
+      p_tag.classList.add("reply");
+      span_name.classList.add("text-warning");
+      span_name.innerText = author + " : ";
+      p_tag.appendChild(span_name);
+      p_tag.appendChild(span_msg);
     }
-
-    
-    function getPreviousChatMessages(){
-        let page_number = document.getElementById('page_number').innerHTML;
-        if(page_number != -1){
-            setPageNumber("-1");
-            chatWindow.scrollTo(0, 50);
-            socket.send(JSON.stringify({
-                "command": "load_messages",
-                "page_number": page_number,
-            }));
-            if (page_number == -1){
-                
-            }
-            
-        }
-
+    if (!isNewMessage) {
+      document
+        .querySelector("#chat-area")
+        .insertBefore(p_tag, chatWindow.firstChild);
+    } else {
+      document.querySelector("#chat-area").appendChild(p_tag);
+      scrollDown();
     }
+  }
 
-    function setPageNumber(pageNumber){
-		document.getElementById("page_number").innerHTML = pageNumber
-	}
+  sendBtn = document.querySelector("#send-btn");
+  inputDOM = document.querySelector("#message");
 
-    function handleLoadMessageEvent(messages, page_number){
-        if(messages != null && messages != undefined && messages != "None"){
-            setPageNumber(page_number);
-            messages.forEach(message => {
-                create_message(message, false)
-                
-            });
-            toggleSpinner();
-        }
-        else{
-            setPaginationExhausted();
-        }
+  sendBtn.addEventListener("click", (event) => {
+    message = inputDOM.value;
+    username = user;
+    command = "new_message";
+    socket.send(
+      JSON.stringify({ message: message, from: username, command: command })
+    );
+    inputDOM.value = "";
+  });
+
+  inputDOM.addEventListener("keyup", (event) => {
+    if (event.keyCode == 13) {
+      sendBtn.click();
     }
+  });
 
-    chatWindow.addEventListener("scroll", function(){
-        if(Math.abs(chatWindow.scrollTop) == 0){
-            getPreviousChatMessages();
-        }
-    });
+  function loadMessages() {
+    socket.send(JSON.stringify({ command: "load_messages" }));
+  }
 
+  function setConnectedUsersCount(users_count) {
+    users_box = document.querySelector(".users");
+    users_box.innerHTML = users_count;
+  }
 
-    let room = '{{ room_title }}';
-    let user = '{{ request.user }}';
-    url = `ws://${window.location.host}/ws/private-chat/room/${room}/`;
-
-    const socket = new WebSocket(url);
-
-    socket.onopen = function open() {
-        console.log('WebSocket Connection Open.');
-        chatWindow.scrollTo(0, chatWindow.scrollHeight);
-        getPreviousChatMessages();
-
-        
-    }
-
-    if (socket.readyState == WebSocket.OPEN) {
-        socket.onopen();
-    }
-
-    socket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-
-        if(data['command'] === 'show_spinner'){toggleSpinner();}
-        //if(data['command'] === 'stop_spinner'){hideSpinner();}
-
-        if(data['command'] === "connected_users"){
-            setConnectedUsersCount(data['connected_users'])
-        }
-        
-        if(data['command'] === "load_messages"){
-            handleLoadMessageEvent(data['messages'], data['new_page_number'])
-
-
-        } else if(data['command'] === "new_message"){
-            create_message(data['message'], true);
-        }
-
-    };
-
-    function create_message(data, isNewMessage){
-        let message = data['content'];
-        let author = data['user'];
-
-        let p_tag = document.createElement('p');
-        p_tag.classList.add('my-2', 'bg-secondary', 'p-2');
-
-        let span_name = document.createElement('span');
-        span_name.classList.add("mx-2");
-        
-        let span_msg = document.createElement('span');
-        span_msg.innerText = message;
-        span_msg.classList.add("text-break")
-
-        if (author === user) {
-            p_tag.classList.add('send');
-            span_name.classList.add("text-info");
-            span_msg.classList.add("text-end");
-            span_name.innerText = " : " + author;
-            // span_name.classList.add("rtl");
-            // span_msg.classList.add("rtl");
-            p_tag.appendChild(span_msg);
-            p_tag.appendChild(span_name);
-        } else {
-            p_tag.classList.add('reply');
-            span_name.classList.add("text-warning");
-            span_name.innerText = author + " : ";
-            p_tag.appendChild(span_name);
-            p_tag.appendChild(span_msg);
-        }
-        if(!isNewMessage){
-            document.querySelector('#chat-area').insertBefore(p_tag, chatWindow.firstChild)
-        }
-        else{
-            document.querySelector('#chat-area').appendChild(p_tag);
-            scrollDown();
-        }
-    }
-
-    socket.onerror = function (e) {
-        console.log('WebSocket Error: ' + e);
-    };
-
-    socket.onclose = function (e) {
-        console.log('WebSocket Closed: ' + e);
-    };
-
-    sendBtn = document.querySelector("#send-btn");
-    inputDOM = document.querySelector("#message")
-
-    sendBtn.addEventListener('click', event => {
-        message = inputDOM.value;
-        username = user;
-        command = "new_message"
-        socket.send(JSON.stringify({ 'message': message, 'from': username, 'command': command }));
-        inputDOM.value = "";
-        
-    });
-
-    inputDOM.addEventListener('keyup', event => {
-        if (event.keyCode == 13) {
-            sendBtn.click();
-        }
-    });
-
-    function loadMessages(){
-        socket.send(JSON.stringify({'command': 'load_messages' }));
-    }
-
-    function setConnectedUsersCount(users_count){
-        users_box = document.querySelector('.users')
-        users_box.innerHTML = users_count
-    }
-
-    function toggleSpinner(){
-        spinner.classList.toggle('invisible')
-    }
+  function toggleSpinner() {
+    spinner.classList.toggle("invisible");
+  }
 </script>
 
 {% endblock script %}

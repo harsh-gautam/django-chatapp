@@ -3,6 +3,7 @@ import json
 
 from account.models import Account
 from friends.models import FriendList, FriendRequest
+from private_chat.models import PrivateChatRoom
 
 def friend_list_view(request, *args, **kwargs):
     user = request.user

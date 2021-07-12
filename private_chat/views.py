@@ -5,7 +5,7 @@ from .models import PrivateChatRoom, PrivateChatMessage
 # Create your views here.
 def private_chat_room_view(request, *args, **kwargs):
     user = request.user
-
+    # print(kwargs["room_id"]/
     if not user.is_authenticated:
         return redirect("account:login")
 
@@ -27,6 +27,6 @@ def private_chat_room_view(request, *args, **kwargs):
             friend = room.user1
 
         m_from_f.append({"message": "", "friend": friend})
-
-    context = {"room_title": kwargs.get("room_title"), "m_from_f": m_from_f}
+    
+    context = {"room_id": kwargs.get("room_id"), "m_from_f": m_from_f}
     return render(request, "private_chat/private_room.html", context)

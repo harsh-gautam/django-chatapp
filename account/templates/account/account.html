@@ -1,180 +1,194 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Profile
-{% endblock title %}
-
-{% block body %}
+{% extends 'base.html' %} {% load static %} {% block title %}Profile 
+{%endblock title %} {% block body %}
 
 <style>
-    .profile-card {
-        width: 400px;
-    }
+  .profile-card {
+    width: 400px;
+  }
 </style>
 {% for key, value in context.items %}
-    <h3>{{key}}</h3><h1>{{value}}</h1>
+<h3>{{key}}</h3>
+<h1>{{value}}</h1>
 {% endfor %}
 <div class="d-flex flex-row">
-    <div class="card  profile-card">
-        <div class="card-header">Profile</div>
-        <div class="card-body align-items-center">
-            <div class="d-flex flex-column align-items-center justify-content-center">
-                <div class="img-container d-flex flex-column mb-4">
-                    <img class="border border-2 border-success" src="{% static 'images/default_profile.png' %}"
-                        alt="profile image" width="200" height="200">
-                    {% if is_self %}
-                        <button class="btn btn-primary btn-sm" onclick="handleEditImage()">Edit Image</button>
-                    {% endif %}
-                </div>
-                <p class="mb-1 mt-3 field-heading">Name</p>
-                <h5>{{name|capfirst}}</h5>
-                <p class='mb-1 mt-3 field-heading'>Email</p>
-                {% if is_self %}
-                    <h5>{{ email }}</h5>
-                {% else %}
-                    {% if hide_email %}
-                        <h5>***************</h5>
-                    {% else %}
-                        <h5>{{ email }}</h5>
-                    {% endif %}
-                {% endif %}
-                <p class="mb-1 mt-3 field-heading">Username</p>
-                <h5>{{username}}</h5>
-
-                {% if is_self %}
-                <div class="d-flex flex-column my-4">
-                    <a href="{% url 'account:edit' user_id=id %}" class="btn btn-primary mb-3">Update</a>
-                    <a href="#">Change Password</a>
-                </div>
-                {% endif %}
-            </div>
+  <div class="card profile-card">
+    <div class="card-header">Profile</div>
+    <div class="card-body align-items-center">
+      <div class="d-flex flex-column align-items-center justify-content-center">
+        <div class="img-container d-flex flex-column mb-4">
+          <img
+            class="border border-2 border-success"
+            src="{% static 'images/default_profile.png' %}"
+            alt="profile image"
+            width="200"
+            height="200"
+          />
+          {% if is_self %}
+          <button class="btn btn-primary btn-sm" onclick="handleEditImage()">
+            Edit Image
+          </button>
+          {% endif %}
         </div>
-    </div>
-    <div class="d-flex flex-column">
+        <p class="mb-1 mt-3 field-heading">Name</p>
+        <h5>{{name|capfirst}}</h5>
+        <p class="mb-1 mt-3 field-heading">Email</p>
         {% if is_self %}
-        <div class="card ms-4 mb-2">
-            <div class="card-body">
-                <h3><a href="{% url 'friends:friend-list' user_id=id %}">Friends ({{ friends|length }})</a></h3>
-            </div>
-        </div>
-        <div class="card ms-4 mb-2">
-            <div class="card-header">Pending Friend Requests</div>
-            <div class="card-body">
-                {% for friend_req in friend_requests %}
-                <div class="d-flex flex-column">
-                    <div id="pending_req_{{ friend_req.id }}">{{ friend_req.sender }}
-                        <a class="id_acceptFriendReqBtns" href="#"> accept </a>
-                        <a class="id_declineFriendReqBtns" href="#"> decline</a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+        <h5>{{ email }}</h5>
+        {% else %} {% if hide_email %}
+        <h5>***************</h5>
         {% else %}
+        <h5>{{ email }}</h5>
+        {% endif %} {% endif %}
+        <p class="mb-1 mt-3 field-heading">Username</p>
+        <h5>{{username}}</h5>
 
-            {% if is_friend %}
-            <div class="card ms-4 mb-2">
-            <div class="card-body">
-                <h3><a href="{% url 'friends:friend-list' user_id=id %}">Friends ({{ friends|length }})</a></h3>
-            </div>
+        {% if is_self %}
+        <div class="d-flex flex-column my-4">
+          <a
+            href="{% url 'account:edit' user_id=id %}"
+            class="btn btn-primary mb-3"
+            >Update</a
+          >
+          <a href="#">Change Password</a>
         </div>
-            <div class="card ms-4 mb-2">
-                <div class="card-body">
-                    <h3 id="remove_{{id}}"><a id="id_removeFriendBtn" href="#">Remove Friend</a></h3>
-                </div>
-            </div>
-            {% else %}
-                {% if is_friend == False and request_sent == 1 %}
-                <div class="card ms-4 mb-2">
-                    <div class="card-body">
-                        <h3><a id="id_sendFriendReqBtn" href="#">Send Friend Request</a></h3>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if is_friend == False and request_sent == 2 %}
-                <div class="card ms-4 mb-2">
-                    <div class="card-body">
-                        <h3 id="cancel_{{id}}" ><a id="id_cancelFriendReqBtn" href="#">Cancel Friend Request</a></h3>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if is_friend == False and request_sent == 3 %}
-                <div class="card ms-4 mb-2">
-                    <div class="card-body">
-                        <div class="d-flex flex-row">
-                            <div id="pending_req_{{ pending_friend_req_id }}">
-                                Accept Friend Request?
-                                <a class="id_acceptFriendReqBtns" href="#"> accept </a> 
-                                <a class="id_declineFriendReqBtns" href="#"> decline</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-            {% endif %}
         {% endif %}
+      </div>
     </div>
-
+  </div>
+  <div class="d-flex flex-column">
+    {% if is_self %}
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3>
+          <a href="{% url 'friends:friend-list' user_id=id %}"
+            >Friends ({{ friends|length }})</a
+          >
+        </h3>
+      </div>
+    </div>
+    <div class="card ms-4 mb-2">
+      <div class="card-header">Pending Friend Requests</div>
+      <div class="card-body">
+        {% for friend_req in friend_requests %}
+        <div class="d-flex flex-column">
+          <div id="pending_req_{{ friend_req.id }}">
+            {{ friend_req.sender }}
+            <a class="id_acceptFriendReqBtns" href="#"> accept </a>
+            <a class="id_declineFriendReqBtns" href="#"> decline</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %} {% if is_friend %}
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3>
+          <a href="{% url 'friends:friend-list' user_id=id %}"
+            >Friends ({{ friends|length }})</a
+          >
+        </h3>
+      </div>
+    </div>
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3 id="{{room_id}}">
+          <a href="{% url 'private-chat:private-room' room_id %}"
+            >Send Message</a
+          >
+        </h3>
+      </div>
+    </div>
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3 id="remove_{{id}}">
+          <a id="id_removeFriendBtn" href="#">Remove Friend</a>
+        </h3>
+      </div>
+    </div>
+    {% else %} {% if is_friend == False and request_sent == 1 %}
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3><a id="id_sendFriendReqBtn" href="#">Send Friend Request</a></h3>
+      </div>
+    </div>
+    {% endif %} {% if is_friend == False and request_sent == 2 %}
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <h3 id="cancel_{{id}}">
+          <a id="id_cancelFriendReqBtn" href="#">Cancel Friend Request</a>
+        </h3>
+      </div>
+    </div>
+    {% endif %} {% if is_friend == False and request_sent == 3 %}
+    <div class="card ms-4 mb-2">
+      <div class="card-body">
+        <div class="d-flex flex-row">
+          <div id="pending_req_{{ pending_friend_req_id }}">
+            Accept Friend Request?
+            <a class="id_acceptFriendReqBtns" href="#"> accept </a>
+            <a class="id_declineFriendReqBtns" href="#"> decline</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% endif %} {% endif %}
+  </div>
 </div>
-{% endblock body %}
-
-{% block script %}
+{% endblock body %} {% block script %}
 <script>
 
-    const ACCEPT_REQ_URL = "{% url 'friends:accept-friend-req' %}";
-    const SEND_REQ_URL = "{% url 'friends:send-friend-req' %}";
-    const DECLINE_REQ_URL = "{% url 'friends:decline-friend-req' %}";
-    const REMOVE_FRIEND_URL = "{% url 'friends:remove-friend' %}";
-    const CANCEL_REQ_URL = "{% url 'friends:cancel-friend-req' %}";
+  const ACCEPT_REQ_URL = "{% url 'friends:accept-friend-req' %}";
+  const SEND_REQ_URL = "{% url 'friends:send-friend-req' %}";
+  const DECLINE_REQ_URL = "{% url 'friends:decline-friend-req' %}";
+  const REMOVE_FRIEND_URL = "{% url 'friends:remove-friend' %}";
+  const CANCEL_REQ_URL = "{% url 'friends:cancel-friend-req' %}";
 
-    function handleEditImage() {
-    // TODO
-            alert('This feature will be implemented soon');
-    }
+  function handleEditImage() {
+  // TODO
+          alert('This feature will be implemented soon');
+  }
 
-    let sendFriendRequestBtn = document.getElementById("id_sendFriendReqBtn");
-    if (sendFriendRequestBtn != null) {
-        sendFriendRequestBtn.addEventListener("click", function () {
-            const csrfToken = "{{ csrf_token }}";
-            sendFriendRequest(SEND_REQ_URL, {{ id }}, csrfToken, onFriendRequestSent);
-    })
-    }
+  let sendFriendRequestBtn = document.getElementById("id_sendFriendReqBtn");
+  if (sendFriendRequestBtn != null) {
+      sendFriendRequestBtn.addEventListener("click", function () {
+          const csrfToken = "{{ csrf_token }}";
+          sendFriendRequest(SEND_REQ_URL, {{ id }}, csrfToken, onFriendRequestSent);
+  })
+  }
 
-    // For accepting friend requests
-    let acceptFriendRequestBtns = document.querySelectorAll(".id_acceptFriendReqBtns");
-    acceptFriendRequestBtns.forEach(element => {
-        element.addEventListener("click", function(){
-            let id = this.parentNode.id.slice(12,);
-            acceptFriendRequest(ACCEPT_REQ_URL, id, onFriendRequestAccept);
-        });
-    });
+  // For accepting friend requests
+  let acceptFriendRequestBtns = document.querySelectorAll(".id_acceptFriendReqBtns");
+  acceptFriendRequestBtns.forEach(element => {
+      element.addEventListener("click", function(){
+          let id = this.parentNode.id.slice(12,);
+          acceptFriendRequest(ACCEPT_REQ_URL, id, onFriendRequestAccept);
+      });
+  });
 
-    let declineFriendRequestBtns = document.querySelectorAll(".id_declineFriendReqBtns");
-    declineFriendRequestBtns.forEach(element => {
-        element.addEventListener("click", function(){
-            let id = this.parentNode.id.slice(12,)
-            declineFriendRequest(DECLINE_REQ_URL, id, onFriendRequestDecline);
-        });
-    });
+  let declineFriendRequestBtns = document.querySelectorAll(".id_declineFriendReqBtns");
+  declineFriendRequestBtns.forEach(element => {
+      element.addEventListener("click", function(){
+          let id = this.parentNode.id.slice(12,)
+          declineFriendRequest(DECLINE_REQ_URL, id, onFriendRequestDecline);
+      });
+  });
 
-    let removeFriendBtn = document.querySelector("#id_removeFriendBtn");
-    if(removeFriendBtn != null){
-        removeFriendBtn.addEventListener("click", function(){
-            let id = this.parentNode.id.slice(7,)
-            removeFriend(REMOVE_FRIEND_URL, id, onFriendRequestDecline);
-        });
-    }
+  let removeFriendBtn = document.querySelector("#id_removeFriendBtn");
+  if(removeFriendBtn != null){
+      removeFriendBtn.addEventListener("click", function(){
+          let id = this.parentNode.id.slice(7,)
+          removeFriend(REMOVE_FRIEND_URL, id, onFriendRequestDecline);
+      });
+  }
 
-    let cancelFriendReqBtn = document.querySelector("#id_cancelFriendReqBtn");
-    if(cancelFriendReqBtn != null){
-        cancelFriendReqBtn.addEventListener("click", function(){
-            let id = this.parentNode.id.slice(7,)
-            cancelFriendRequest(CANCEL_REQ_URL, id, onFriendRequestDecline);
-        });
-    }
+  let cancelFriendReqBtn = document.querySelector("#id_cancelFriendReqBtn");
+  if(cancelFriendReqBtn != null){
+      cancelFriendReqBtn.addEventListener("click", function(){
+          let id = this.parentNode.id.slice(7,)
+          cancelFriendRequest(CANCEL_REQ_URL, id, onFriendRequestDecline);
+      });
+  }
 </script>
 
 <script src="{% static 'account/js/main.js' %}"></script>
