@@ -6,7 +6,7 @@
 <div class="container my-2">
   <div class="row">
     <div class="card col-8 px-0">
-      <div class="card-header">{{ room_title }}</div>
+      <div class="card-header">{{ room_id }}</div>
       <div class="card-body text-center mx-auto">
         <span class="invisible" id="page_number">1</span>
         <div class="spinner invisible spinner-border mx-auto">
@@ -116,18 +116,13 @@
 
   let room_id = "{{ room_id }}";
   let user = "{{ request.user }}";
-  url = `ws://${window.location.host}/ws/private-chat/room/${room_id}/`;
+  url = `ws://${window.location.host}/ws/private/room/${room_id}/`;
 
   const socket = new WebSocket(url);
-  socket.addEventListener("open", (e) => {
-    console.log("Socket Open");
-  });
 
   socket.onopen = function open() {
     console.log("WebSocket Connection Open.");
-    // chatWindow.scrollTo(0, chatWindow.scrollHeight);
-    // getPreviousChatMessages();
-    socket.send(JSON.stringify({ room_id: room, command: "join_room" }));
+    socket.send(JSON.stringify({ "room_id": room_id, "command": "join_room" }));
   };
 
   if (socket.readyState == WebSocket.OPEN) {

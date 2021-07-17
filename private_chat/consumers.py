@@ -12,24 +12,20 @@ import json
 class PrivateChatConsumer(AsyncWebsocketConsumer):
 
   async def connect(self):
-    room_id = self.scope['url_route']['kwargs']['room_id']
-    user = self.scope["user"]
-    # print(room_id, user)
-    self.accept()  # Let everyone connect
+    await self.accept()  # Let everyone connect
     self.room_id = None
 
-  async def receive(self, data):
-    data = json.loads(data)  # Converting recieved data into JSON format
-    print(data)
+  async def receive(self, text_data):
+    data = json.loads(text_data)  # Converting recieved data into JSON format
     command = data.get("command", None)
     if command is not None:
         await self.commands[command](self, data)
 
   async def join_room(self, data):
-    room_id = data["room_id"]
+    id = data["room_id"]
     user = self.scope["user"]
     try:
-      room = await self.get_room_or_error(room_id, user)
+      room = await self.get_room_or_error(id, user)
     except ClientError as e:
       raise await self.handle_client_error(e)
 
@@ -42,7 +38,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
       room.group_name,
       self.channel_name,
     )
-    print("user connected to room", self.room_id)
+    print("User Connect to Room ", self.room_id)
 
   async def leave_room(self, data):
     pass
@@ -53,6 +49,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     pass
   async def get_room_chat_messages(self, data):
     pass
+
   async def disconnect(self, close_code):
     print("Private Chat - Disconnected", close_code)
   
@@ -69,6 +66,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     return
 
   commands = {
+    "join_room": join_room,
     "leave_room": leave_room,
     "get_user_info": get_user_info,
     "send_message": send_message,
@@ -80,7 +78,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     """
     Tries to fetch a room for the user, checking permissions along the way.
     """
-    print("INSIDE DATABASE O/P",room_id, user)
     try:
       room = PrivateChatRoom.objects.get(pk=room_id)
     except PrivateChatRoom.DoesNotExist:

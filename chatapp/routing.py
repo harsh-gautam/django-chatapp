@@ -7,25 +7,24 @@ from django.urls import re_path
 from chat.consumers import ChatRoomConsumer
 from private_chat.consumers import PrivateChatConsumer
 
-
 application = ProtocolTypeRouter(
     {
-        "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(
-                URLRouter(
-                    [
-                        re_path(
-                            r"^ws/chat/room/(?P<room_title>\w+)/$",
-                            ChatRoomConsumer.as_asgi(),
-                        ),
-                        re_path(
-                            r"^ws/private-chat/room/(?P<room_id>\w+)/$",
-                            PrivateChatConsumer.as_asgi(),
-                        ),
-                    ]
-                ),
-            ),
-        ),
+      "websocket": AllowedHostsOriginValidator(
+          AuthMiddlewareStack(
+              URLRouter(
+                [
+                  re_path(
+                    r"^ws/chat/room/(?P<room_title>\w+)/$",
+                    ChatRoomConsumer.as_asgi(),
+                  ),
+                  re_path(
+                    r"^ws/private/room/(?P<room_id>\w+)/$",
+                    PrivateChatConsumer.as_asgi(),
+                  ),
+                ]
+              ),
+          ),
+      ),
     }
 )
 

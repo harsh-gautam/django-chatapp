@@ -88,6 +88,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     
     async def disconnect(self, close_code):
       # await self.update_user_status_decr(self.scope['user'])  
+      print("DISCONNETED_PUBLIC_CHAT")
       await self.leave_room(close_code)
         
 
