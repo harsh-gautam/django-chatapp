@@ -1,0 +1,39 @@
+<script>
+function createOrReturnPrivateChat(id, csrfmiddlewaretoken) {
+  payload = {
+    user2_id: id,
+  };
+  let xhr = new XMLHttpRequest();
+  let url = "{% url 'private_chat:create-or-return-private-chat' %}";
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("X-CSRFToken", csrfmiddlewaretoken);
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+  xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+  xhr.onload = function () {
+    if (this.status >= 200 && this.status < 400) {
+      let data = JSON.parse(this.response);
+      console.log(data);
+      if (data["response"] === "Successfully got the chat.") {
+        OnGetOrCreateChatroomSuccess(data["room_id"]);
+      } else if (data["response"] != null) {
+        alert(data["response"]);
+      }
+    } else {
+      console.log("We reached our target server, but it returned an error");
+    }
+  };
+  xhr.onerror = function () {
+    // There was a connection error of some sort
+  };
+
+  xhr.send(JSON.stringify(payload));
+}
+
+function OnGetOrCreateChatroomSuccess(roomId) {
+  var url = `{% url 'private-chat:private-room' %}?room_id=${roomId}`;
+  var win = window.location.replace(url);
+  // window.open(url) // for new tab
+  win.focus();
+}
+</script>
+

@@ -10,18 +10,30 @@ import json
 
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
-
+  # Connect to the Consumer
   async def connect(self):
     await self.accept()  # Let everyone connect
     self.room_id = None
 
+  # Disconnect from Consumer
+  async def disconnect(self, close_code):
+    try:
+      if self.room_id != None:
+        await self.leave_room(self.room_id)
+    except Exception as e:
+      print("Exception Occured ", e) 
+
+  # Received a message from client
   async def receive(self, text_data):
     data = json.loads(text_data)  # Converting recieved data into JSON format
     command = data.get("command", None)
     if command is not None:
         await self.commands[command](self, data)
-
+  
+  # Join a chat
   async def join_room(self, data):
+    ''' Called by receive() method when someone tries to join a room'''
+
     id = data["room_id"]
     user = self.scope["user"]
     try:
@@ -40,18 +52,75 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     )
     print("User Connect to Room ", self.room_id)
 
-  async def leave_room(self, data):
+
+  async def send_room(self, data):
+    ''' Called by receive() when someone sends a message in room'''
+    room_id = data["room_id"]
+    message = data["message"]
     pass
+
+
+  async def leave_room(self, room_id):
+    user = self.scope["user"]
+    room = await self.get_room_or_error(room_id, user)
+    await self.disconnect_user(room, user)
+    print("Private Chat - Disconnected") 
+
+
+  async def send_messages_payload(self, messages, new_page_number):
+    '''Send a payload of messages to UI'''
+    pass
+
+
+  async def send_user_info_payload(self, user_info):
+    """
+    Send a payload of user information to the ui
+    """
+    print("ChatConsumer: send_user_info_payload. ")
+
+
+  # These helper methods are named by the types we send - so chat.join becomes chat_join
+  async def chat_join(self, event):
+    """
+    Called when someone has joined our chat.
+    """
+    # Send a message down to the client
+    print("ChatConsumer: chat_join: " + str(self.scope["user"].id))
+
+
+  async def chat_leave(self, event):
+    """
+    Called when someone has left our chat.
+    """
+    # Send a message down to the client
+    print("ChatConsumer: chat_leave")
+
+
+  async def chat_message(self, event):
+    """
+    Called when someone has messaged our chat.
+    """
+    # Send a message down to the client
+    print("ChatConsumer: chat_message")
+
 
   async def get_user_info(self, data):
     pass
-  async def send_message(self, data):
-    pass
+
+
   async def get_room_chat_messages(self, data):
     pass
 
-  async def disconnect(self, close_code):
-    print("Private Chat - Disconnected", close_code)
+
+  async def display_progress_bar(self, is_displayed):
+    """
+    1. is_displayed = True
+      - Display the progress bar on UI
+    2. is_displayed = False
+      - Hide the progress bar on UI
+    """
+    print("DISPLAY PROGRESS BAR: " + str(is_displayed))
+
   
   async def handle_client_error(self, e):
     """
@@ -65,11 +134,12 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
       await self.send_message(errorData)
     return
 
+
   commands = {
     "join_room": join_room,
     "leave_room": leave_room,
     "get_user_info": get_user_info,
-    "send_message": send_message,
+    "send_room": send_room,
     "get_room_chat_messages": get_room_chat_messages,
   }
 

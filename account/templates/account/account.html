@@ -85,17 +85,15 @@
       <div class="card-body">
         <h3>
           <a href="{% url 'friends:friend-list' user_id=id %}"
-            >Friends ({{ friends|length }})</a
-          >
+            >Friends ({{ friends|length }})</a>
         </h3>
       </div>
     </div>
     <div class="card ms-4 mb-2">
       <div class="card-body">
-        <h3 id="{{room_id}}">
-          <a href="{% url 'private-chat:private-room' room_id %}"
-            >Send Message</a
-          >
+        <h3 id="message_{{id}}">
+          <a onclick="createOrReturnPrivateChat('{{id}}', '{{csrf_token}}')"
+            >Send Message</a>
         </h3>
       </div>
     </div>
@@ -190,7 +188,7 @@
       });
   }
 </script>
-
+{% include 'private_chat/snippets/create_or_return_private_chat.html' %}
 <script src="{% static 'account/js/main.js' %}"></script>
 <script src="{% static 'account/js/friend_request_status.js' %}"></script>
 {% endblock script %}

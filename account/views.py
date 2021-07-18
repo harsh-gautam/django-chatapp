@@ -7,6 +7,7 @@ from friends.models import FriendRequest, FriendList
 from friends.utils import FriendReqStatus, get_friend_req_or_false
 
 from private_chat.models import PrivateChatRoom
+from private_chat.utils import find_or_create_private_chat
 
 # TODOs : implement image crop and upload image logic
 
@@ -105,21 +106,6 @@ def account_view(request, *args, **kwargs):
 
           if friends.filter(pk=user.id): # Is the viewer watching other user is in his/her friend list?
             is_friend = True
-            try:
-              print("Trying first IF")
-              room = PrivateChatRoom.objects.filter(user1=user, user2=account, is_active=True)
-              if room.exists():
-                context["room_id"] = room[0].id
-              else:
-                room = PrivateChatRoom.objects.filter(user1=account, user2=user, is_active=True)
-                if room.exists():
-                  context["room_id"] = room[0].id
-                else:
-                  room = PrivateChatRoom(user1=user, user2=account, is_active=True)
-                  room.save()
-                  context["room_id"] = room.id
-            except PrivateChatRoom.DoesNotExist:
-              pass
               
           else:
             is_friend = False
@@ -150,8 +136,6 @@ def account_view(request, *args, **kwargs):
         context['is_friend'] = is_friend
         context['friend_requests'] = friend_requests
         context['request_sent'] = request_sent
-    print(type(context))
-    print(context)
     return render(request, 'account/account.html', context)
 
 
@@ -174,7 +158,6 @@ def search_view(request, *args, **kwargs):
                 accounts.append([account, False])
 
         context['accounts'] = accounts
-
     return render(request, "account/search_results.html", context)
 
 
