@@ -1,16 +1,24 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+from django.core.serializers import serialize
+from django.utils import timezone
+import json
+
 from private_chat.models import PrivateChatMessage, PrivateChatRoom
 from private_chat.exceptions import ClientError
+from private_chat.utils import calculate_timestamp
+from private_chat.constants import *
+
 from friends.models import FriendList
+
 from account.models import Account
 from account.utils import LazyAccountEncoder
-import json
 
 # from django.core.paginator import Paginator
 
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
+
   # Connect to the Consumer
   async def connect(self):
     await self.accept()  # Let everyone connect
@@ -28,8 +36,11 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
   async def receive(self, text_data):
     data = json.loads(text_data)  # Converting recieved data into JSON format
     command = data.get("command", None)
-    if command is not None:
-        await self.commands[command](self, data)
+    try:
+      if command is not None:
+          await self.commands[command](self, data)
+    except ClientError as e:
+      await self.handle_client_error(e)
   
   # Join a chat
   async def join_room(self, data):
@@ -40,7 +51,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     try:
       room = await self.get_room_or_error(id, user)
     except ClientError as e:
-      raise await self.handle_client_error(e)
+      return await self.handle_client_error(e)
 
     await self.connect_user(room, user)
 
@@ -52,6 +63,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
       self.channel_name,
     )
 
+    # Infrom client that chat is connected
     await self.send(text_data=json.dumps({
 			"join": str(room.id),
 		}))
@@ -62,13 +74,58 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     ''' Called by receive() when someone sends a message in room'''
     room_id = data["room_id"]
     message = data["message"]
-    pass
+    if len(message.lstrip()) == 0:
+      raise ClientError("422", "You can't send an empty message")
+    
+    if self.room_id != None:
+      print("SELF ROOM ID: ", self.room_id)
+      print("ROOM ID: ", room_id)
+      if str(room_id) != str(self.room_id):
+        print("SELF ROOM ID AND ROOM ID DOES NOT MATCH")
+        raise ClientError("ROOM_ACCESS_DENIED", "Room access denied.")
+    else:
+      print("SELF ROOM ID IS NONE")
+      raise ClientError("ROOM_ACCESS_DENIED", "Room access denied.")
+    
+    room = await self.get_room_or_error(room_id, self.scope["user"])
+
+    await self.create_room_message(room, self.scope['user'], message)
+
+    await self.channel_layer.group_send(
+      room.group_name,
+      {
+        "type": "chat.message",
+        "profile_image": self.scope['user'].profile_image.url,
+        "username": self.scope['user'].username,
+        "user_id": self.scope['user'].id,
+        "message": message
+      }
+    )  
 
 
   async def leave_room(self, room_id):
     user = self.scope["user"]
     room = await self.get_room_or_error(room_id, user)
-    await self.disconnect_user(room, user)
+
+    # Notify the group that someone has left
+    await self.channel_layer.group_send(
+      room.group_name,
+      {
+        "type":"chat.leave",
+        "room_id": room_id,
+        "profile_image": self.scope["user"].profile_image.url,
+        "username": self.scope["user"].username,
+        "user_id": self.scope["user"].id
+      }
+    )
+    # Remove from room
+    self.room_id = None
+    await self.channel_layer.group_discard(
+      room.group_name,
+      self.channel_name,
+    )
+
+    await self.send(text_data=json.dumps({"leave": str(room_id)}))
     print("Private Chat - Disconnected") 
 
 
@@ -107,6 +164,17 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     """
     # Send a message down to the client
     print("ChatConsumer: chat_message")
+    timestamp = calculate_timestamp(timezone.now())
+    await self.send(text_data=json.dumps(
+      {
+        "msg_type": MSG_TYPE_MESSAGE,
+        "username": event['username'],
+        'user_id': event['user_id'],
+        'profile_image': event['profile_image'],
+        'message': event['message'],
+        'timestamp': timestamp
+      }
+    ))
 
 
   async def get_user_info(self, data):
@@ -118,7 +186,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         other_user = room.user2
       payload = {}
       s = LazyAccountEncoder()
-      payload['user_info'] = s.serialize([other_user])[0] 
+      payload['user_info'] = s.serialize([other_user])[0]
       await self.send_user_info_payload(payload['user_info'])
     except Exception as e:
       print("EXCEPTION: " + str(e))
@@ -158,7 +226,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     errorData['error'] = e.code
     if e.message:
       errorData['message'] = e.message
-      await self.send_message(errorData)
+      await self.send(text_data=json.dumps(errorData))
     return
 
 
@@ -202,3 +270,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     # add user to connected user list
     account = Account.objects.get(pk=user.id)
     return room.disconnect_user(account)
+  
+  @database_sync_to_async
+  def create_room_message(self, room, user, message):
+    return PrivateChatMessage.objects.create(user=user, room=room, content=message)

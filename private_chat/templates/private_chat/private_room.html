@@ -26,7 +26,7 @@
   <div class="row">
     <div class="card col-8 px-0" id="id_chatroom_card">
       <div class="card-header" id="{{room_id}}">
-        <a href="#" target="_blank" id="id_user_info_container">
+        <a class="d-flex flex-row" href="#" target="_blank" id="id_user_info_container">
         <img class="profile-image rounded-circle img-fluid" id="id_other_user_pimage" src="{% static 'images/default_profile.png'%}">
         <h3 class="ml-2" id="id_other_username"></h3>
       </a>
@@ -36,7 +36,7 @@
         <div class="spinner invisible spinner-border mx-auto">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <div id="chat-area" class="d-flex overflow-auto py-3">
+        <div id="chat-area" class="d-flex flex-column overflow-auto py-3">
           <!-- <p class="d-flex justify-content-end  mb-2">
                         <span class="">This is right</span><span class="mx-2">: Harsh </span>
                     </p>
@@ -123,11 +123,6 @@
 	}
 
   // var spinner = document.querySelector(".spinner");
-  // var chatWindow = document.getElementById("chat-area");
-  // function scrollDown() {
-  //   let xH = chatWindow.scrollHeight;
-  //   chatWindow.scrollTo(0, xH);
-  // }
 
   // function leaveRoom() {
   //   socket.send(
@@ -209,8 +204,11 @@
 
       // Handling Errors
       if(data.error){
-        console.log("Error: " + e.error + " " + e.message)
+        console.log("Error: " + data.error + " " + data.message)
+        showClientErrorModal(data.message)
+        return;
       }
+
       // Handling Join in Clients perspective
       if(data.join) {
         console.log("Joining room " + data.join)
@@ -225,6 +223,11 @@
       // Handle user_info payload
       if(data.user_info) {
         handleUserInfo(data.user_info)
+      }
+
+      if(data.msg_type == 0) {
+        // appendChatMessage(data, false, true)
+        create_message(data, true)
       }
     };
 
@@ -243,64 +246,77 @@
     document.getElementById("id_user_info_container").href="{% url 'account:profile' user_id=124231 %}".replace("124231", userInfo['id'])
     document.getElementById("id_other_username").innerHTML= userInfo["username"]
   }
-  // function create_message(data, isNewMessage) {
-  //   let message = data["content"];
-  //   let author = data["user"];
 
-  //   let p_tag = document.createElement("p");
-  //   p_tag.classList.add("my-2", "bg-secondary", "p-2");
+	function showClientErrorModal(message){
+    alert(message)
+		document.getElementById("id_client_error_modal_body").innerHTML = message
+		document.getElementById("id_trigger_client_error_modal").click()
+	}
 
-  //   let span_name = document.createElement("span");
-  //   span_name.classList.add("mx-2");
+  var chatWindow = document.getElementById("chat-area");
+  function scrollDown() {
+    let xH =  chatWindow.scrollHeight;
+    chatWindow.scrollTo(0, xH);
+  }
 
-  //   let span_msg = document.createElement("span");
-  //   span_msg.innerText = message;
-  //   span_msg.classList.add("text-break");
+  function create_message(data, isNewMessage) {
+    let message = data["message"];
+    let author = data["username"];
+    user = "{{request.user}}"
 
-  //   if (author === user) {
-  //     p_tag.classList.add("send");
-  //     span_name.classList.add("text-info");
-  //     span_msg.classList.add("text-end");
-  //     span_name.innerText = " : " + author;
-  //     // span_name.classList.add("rtl");
-  //     // span_msg.classList.add("rtl");
-  //     p_tag.appendChild(span_msg);
-  //     p_tag.appendChild(span_name);
-  //   } else {
-  //     p_tag.classList.add("reply");
-  //     span_name.classList.add("text-warning");
-  //     span_name.innerText = author + " : ";
-  //     p_tag.appendChild(span_name);
-  //     p_tag.appendChild(span_msg);
-  //   }
-  //   if (!isNewMessage) {
-  //     document
-  //       .querySelector("#chat-area")
-  //       .insertBefore(p_tag, chatWindow.firstChild);
-  //   } else {
-  //     document.querySelector("#chat-area").appendChild(p_tag);
-  //     scrollDown();
-  //   }
-  // }
+    let p_tag = document.createElement("p");
+    p_tag.classList.add("my-2", "bg-secondary", "p-2");
 
-  // sendBtn = document.querySelector("#send-btn");
-  // inputDOM = document.querySelector("#message");
+    let span_name = document.createElement("span");
+    span_name.classList.add("mx-2");
 
-  // sendBtn.addEventListener("click", (event) => {
-  //   message = inputDOM.value;
-  //   username = user;
-  //   command = "new_message";
-  //   socket.send(
-  //     JSON.stringify({ message: message, from: username, command: command })
-  //   );
-  //   inputDOM.value = "";
-  // });
+    let span_msg = document.createElement("span");
+    span_msg.innerText = message;
+    span_msg.classList.add("text-break");
 
-  // inputDOM.addEventListener("keyup", (event) => {
-  //   if (event.keyCode == 13) {
-  //     sendBtn.click();
-  //   }
-  // });
+    if (author === user) {
+      p_tag.classList.add("send");
+      span_name.classList.add("text-info");
+      span_msg.classList.add("text-end");
+      span_name.innerText = " : You";
+      // span_name.classList.add("rtl");
+      // span_msg.classList.add("rtl");
+      p_tag.appendChild(span_msg);
+      p_tag.appendChild(span_name);
+    } else {
+      p_tag.classList.add("reply");
+      span_name.classList.add("text-warning");
+      span_name.innerText = author + " : ";
+      p_tag.appendChild(span_name);
+      p_tag.appendChild(span_msg);
+    }
+    if (!isNewMessage) {
+      document
+        .querySelector("#chat-area")
+        .insertBefore(p_tag, chatWindow.firstChild);
+    } else {
+      document.querySelector("#chat-area").appendChild(p_tag);
+      scrollDown();
+    }
+  }
+
+  sendBtn = document.querySelector("#send-btn");
+  inputDOM = document.querySelector("#message");
+
+  sendBtn.addEventListener("click", (event) => {
+    message = inputDOM.value;
+    command = "send_room";
+    socket.send(
+      JSON.stringify({ message: message, command: command, "room_id": roomId })
+    );
+    inputDOM.value = "";
+  });
+
+  inputDOM.addEventListener("keyup", (event) => {
+    if (event.keyCode == 13) {
+      sendBtn.click();
+    }
+  });
 
   function loadMessages() {
     socket.send(JSON.stringify({ command: "load_messages" }));
