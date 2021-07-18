@@ -26,8 +26,10 @@
   <div class="row">
     <div class="card col-8 px-0" id="id_chatroom_card">
       <div class="card-header" id="{{room_id}}">
+        <a href="#" target="_blank" id="id_user_info_container">
         <img class="profile-image rounded-circle img-fluid" id="id_other_user_pimage" src="{% static 'images/default_profile.png'%}">
         <h3 class="ml-2" id="id_other_username"></h3>
+      </a>
       </div>
       <div class="card-body ">
         <span class="invisible" id="page_number">1</span>
@@ -76,6 +78,7 @@
     </div>
   </div>
 </div>
+
 <!-- Client Error MODAL -->
 <button type="button" id="id_trigger_client_error_modal" class="d-none btn btn-primary" data-toggle="modal" data-target="#id_client_error_modal">
 </button>
@@ -205,19 +208,26 @@
       const data = JSON.parse(e.data);
 
       // Handling Errors
-      if(e.error){
+      if(data.error){
         console.log("Error: " + e.error + " " + e.message)
       }
       // Handling Join in Clients perspective
-      if(e.join) {
-        console.log("Joining room " + e.join)
+      if(data.join) {
+        console.log("Joining room " + data.join)
+        socket.send(JSON.stringify({"command":"get_user_info", "room_id": roomId}))
       }
 
       // Handling Leave
-      if(e.leave) {
+      if(data.leave) {
         console.log("Leaving room " + e.leave)
       }
+
+      // Handle user_info payload
+      if(data.user_info) {
+        handleUserInfo(data.user_info)
+      }
     };
+
     socket.onerror = function (e) {
       console.log("WebSocket Error: ");
       console.log(e);
@@ -229,6 +239,10 @@
     };
   }
 
+  function handleUserInfo(userInfo) {
+    document.getElementById("id_user_info_container").href="{% url 'account:profile' user_id=124231 %}".replace("124231", userInfo['id'])
+    document.getElementById("id_other_username").innerHTML= userInfo["username"]
+  }
   // function create_message(data, isNewMessage) {
   //   let message = data["content"];
   //   let author = data["user"];
@@ -301,38 +315,6 @@
     spinner.classList.toggle("invisible");
   }
 
-  // AJAX request to update chatroom
-  // function createOrReturnPrivateChat(id, csrf_token){
-	// 	payload = {
-	// 		"csrfmiddlewaretoken": "{{ csrf_token }}",
-	// 		"user2_id": id,
-	// 	}
-  //   let xhr = new XMLHttpRequest();
-  //   let url =  "{% url 'private_chat:create-or-return-private-chat' %}"
-  //   xhr.open('POST', url, true)
-  //   xhr.setRequestHeader('X-CSRFToken', payload['csrfmiddlewaretoken']);
-  //   xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-  //   xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-  //   xhr.onload = function() {
-  //       if (this.status >= 200 && this.status < 400) {
-  //           let data = JSON.parse(this.response);
-  //           console.log(data)
-  //           if(data["response"] === "Successfully got the chat."){
-  //             setupWebSocket(data['room_id'])
-  //           }
-  //           else if(data['response'] != null){
-  //             alert(data['response'])
-  //           }
-  //       } else {
-  //           console.log('We reached our target server, but it returned an error');
-  //       }
-  //   };
-  //   xhr.onerror = function() {
-  //       // There was a connection error of some sort
-  //       };
-
-  //   xhr.send(JSON.stringify(payload));
-	// }
 </script>
 
 {% endblock script %}

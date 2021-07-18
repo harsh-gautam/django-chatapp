@@ -4,6 +4,7 @@ from private_chat.models import PrivateChatMessage, PrivateChatRoom
 from private_chat.exceptions import ClientError
 from friends.models import FriendList
 from account.models import Account
+from account.utils import LazyAccountEncoder
 import json
 
 # from django.core.paginator import Paginator
@@ -50,6 +51,10 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
       room.group_name,
       self.channel_name,
     )
+
+    await self.send(text_data=json.dumps({
+			"join": str(room.id),
+		}))
     print("User Connect to Room ", self.room_id)
 
 
@@ -105,7 +110,29 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
 
 
   async def get_user_info(self, data):
-    pass
+    user = self.scope["user"]
+    room = await self.get_room_or_error(data["room_id"], user)
+    try:
+      other_user = room.user1
+      if other_user == user:
+        other_user = room.user2
+      payload = {}
+      s = LazyAccountEncoder()
+      payload['user_info'] = s.serialize([other_user])[0] 
+      await self.send_user_info_payload(payload['user_info'])
+    except Exception as e:
+      print("EXCEPTION: " + str(e))
+
+  async def send_user_info_payload(self, user_info):
+    """
+    Send a payload of user information to the ui
+    """
+    print("ChatConsumer: send_user_info_payload. ")
+    await self.send(text_data=json.dumps(
+      {
+        "user_info": user_info,
+      },)
+    )
 
 
   async def get_room_chat_messages(self, data):
