@@ -28,8 +28,12 @@
       <div class="card-header" id="{{room_id}}">
         <a class="d-flex flex-row" href="#" target="_blank" id="id_user_info_container">
         <img class="profile-image rounded-circle img-fluid" id="id_other_user_pimage" src="{% static 'images/default_profile.png'%}">
-        <h3 class="ml-2" id="id_other_username"></h3>
-      </a>
+        <h3 class="ml-2" id="id_other_username">
+          
+        </h3>
+        
+        <span id="id_status" class="p-2 mx-4 my-3 bg-danger border border-light rounded-circle"></span>
+        </a>
       </div>
       <div class="card-body ">
         <span class="invisible" id="page_number">1</span>
@@ -109,6 +113,8 @@
   let csrfmiddlewaretoken = "{{ csrf_token }}"
   let roomId = "{{ room_id }}"
   let socket = null
+  let chatWindow = document.getElementById("chat-area");
+  
   onStart();
   function onStart(){
     {%if not room_id and m_from_f %}
@@ -134,54 +140,19 @@
   //   window.location.replace("http://" + window.location.host);
   // }
 
-  // function setPaginationExhausted() {
-  //   setPageNumber("-1");
-  // }
-
-  // function getPreviousChatMessages() {
-  //   let page_number = document.getElementById("page_number").innerHTML;
-  //   if (page_number != -1) {
-  //     setPageNumber("-1");
-  //     chatWindow.scrollTo(0, 50);
-  //     socket.send(
-  //       JSON.stringify({
-  //         command: "load_messages",
-  //         page_number: page_number,
-  //       })
-  //     );
-  //     if (page_number == -1) {
-  //     }
-  //   }
-  // }
-
-  // function setPageNumber(pageNumber) {
-  //   document.getElementById("page_number").innerHTML = pageNumber;
-  // }
-
-  // function handleLoadMessageEvent(messages, page_number) {
-  //   if (messages != null && messages != undefined && messages != "None") {
-  //     setPageNumber(page_number);
-  //     messages.forEach((message) => {
-  //       create_message(message, false);
-  //     });
-  //     toggleSpinner();
-  //   } else {
-  //     setPaginationExhausted();
-  //   }
-  // }
-
+  
   // chatWindow.addEventListener("scroll", function () {
-  //   if (Math.abs(chatWindow.scrollTop) == 0) {
-  //     getPreviousChatMessages();
-  //   }
-  // });
-
+    //   if (Math.abs(chatWindow.scrollTop) == 0) {
+      //     getPreviousChatMessages();
+      //   }
+      // });
+      
   function closeWebSocket(){
-		if(socket != null){
-			socket.close()
-			socket = null
-		}
-	}
+    if(socket != null){
+      socket.close()
+      socket = null
+    }
+  }
 
   function setupWebSocket(roomId){
     let user = "{{ request.user }}";
@@ -213,6 +184,7 @@
       if(data.join) {
         console.log("Joining room " + data.join)
         socket.send(JSON.stringify({"command":"get_user_info", "room_id": roomId}))
+        getPreviousChatMessages()
       }
 
       // Handling Leave
@@ -225,9 +197,12 @@
         handleUserInfo(data.user_info)
       }
 
-      if(data.msg_type == 0) {
-        // appendChatMessage(data, false, true)
-        create_message(data, true)
+      if(data.msg_type == 0 || data.msg_type == 1 || data.msg_type == 2) {
+        appendChatMessage(data, true)
+        // create_message(data, true)
+      }
+      if(data.messages_payload) {
+        handleLoadMessageEvent(data["messages"], )
       }
     };
 
@@ -247,62 +222,95 @@
     document.getElementById("id_other_username").innerHTML= userInfo["username"]
   }
 
-	function showClientErrorModal(message){
+  function showClientErrorModal(message){
     alert(message)
-		document.getElementById("id_client_error_modal_body").innerHTML = message
-		document.getElementById("id_trigger_client_error_modal").click()
-	}
+    document.getElementById("id_client_error_modal_body").innerHTML = message
+    document.getElementById("id_trigger_client_error_modal").click()
+  }
 
-  var chatWindow = document.getElementById("chat-area");
   function scrollDown() {
     let xH =  chatWindow.scrollHeight;
     chatWindow.scrollTo(0, xH);
   }
 
-  function create_message(data, isNewMessage) {
-    let message = data["message"];
-    let author = data["username"];
-    user = "{{request.user}}"
+  function appendChatMessage(data, isNewMessage) {
+    let msg_type = data["msg_type"]
+    let message = data["message"]
+    let author = data["username"]
+    let user = "{{request.user}}"
 
-    let p_tag = document.createElement("p");
-    p_tag.classList.add("my-2", "bg-secondary", "p-2");
-
-    let span_name = document.createElement("span");
-    span_name.classList.add("mx-2");
-
-    let span_msg = document.createElement("span");
-    span_msg.innerText = message;
-    span_msg.classList.add("text-break");
-
-    if (author === user) {
-      p_tag.classList.add("send");
-      span_name.classList.add("text-info");
-      span_msg.classList.add("text-end");
-      span_name.innerText = " : You";
-      // span_name.classList.add("rtl");
-      // span_msg.classList.add("rtl");
-      p_tag.appendChild(span_msg);
-      p_tag.appendChild(span_name);
-    } else {
-      p_tag.classList.add("reply");
-      span_name.classList.add("text-warning");
-      span_name.innerText = author + " : ";
-      p_tag.appendChild(span_name);
-      p_tag.appendChild(span_msg);
+    switch(msg_type){
+      case 0:
+        createMessage(message, author, user, isNewMessage)
+        break;
+      case 1:
+        // User joined room
+        createConnectedDisconnectedMessage(msg_type, message, author, user)
+        break;
+      case 2:
+        // User leave room
+        createConnectedDisconnectedMessage(msg_type, message, author, user)
+        break;
     }
-    if (!isNewMessage) {
-      document
+      
+  }
+    
+    function createMessage(message, author, current_user, isNewMessage) {
+      
+      let p_tag = document.createElement("p");
+      p_tag.classList.add("my-2", "bg-secondary", "p-2");
+      
+      let span_name = document.createElement("span");
+      span_name.classList.add("mx-2");
+      
+      let span_msg = document.createElement("span");
+      span_msg.innerText = message;
+      span_msg.classList.add("text-break");
+      
+      if (author === current_user) {
+        p_tag.classList.add("send");
+        span_name.classList.add("text-info");
+        span_msg.classList.add("text-end");
+        span_name.innerText = " : You";
+        // span_name.classList.add("rtl");
+        // span_msg.classList.add("rtl");
+        p_tag.appendChild(span_msg);
+        p_tag.appendChild(span_name);
+      } else {
+        p_tag.classList.add("reply");
+        span_name.classList.add("text-warning");
+        span_name.innerText = author + " : ";
+        p_tag.appendChild(span_name);
+        p_tag.appendChild(span_msg);
+      }
+      if (!isNewMessage) {
+        document
         .querySelector("#chat-area")
         .insertBefore(p_tag, chatWindow.firstChild);
-    } else {
-      document.querySelector("#chat-area").appendChild(p_tag);
-      scrollDown();
+      } else {
+        document.querySelector("#chat-area").appendChild(p_tag);
+        scrollDown();
+      }
     }
+    
+  function createConnectedDisconnectedMessage(msg_type, message, author, user){
+    if(author === user) return;
+    let status = document.getElementById("id_status");
+    // TODO : Fix bug in online status 
+    if(msg_type === 1){
+      status.classList.remove("bg-danger")
+      status.classList.add("bg-success")
+    }
+    if(msg_type === 2){
+      status.classList.remove("bg-success")
+      status.classList.add("bg-danger")
+    }
+    
   }
-
+    
   sendBtn = document.querySelector("#send-btn");
   inputDOM = document.querySelector("#message");
-
+  
   sendBtn.addEventListener("click", (event) => {
     message = inputDOM.value;
     command = "send_room";
@@ -311,22 +319,54 @@
     );
     inputDOM.value = "";
   });
+  
+  function setPaginationExhausted() {
+    setPageNumber("-1");
+  }
+
+  function setPageNumber(pageNumber) {
+    document.getElementById("page_number").innerHTML = pageNumber;
+  }
+
+  function getPreviousChatMessages() {
+    let page_number = document.getElementById("page_number").innerHTML;
+    if (page_number != -1) {
+      setPageNumber("-1");
+      chatWindow.scrollTo(0, 50);
+      socket.send(
+        JSON.stringify({
+          "command": "get_chat_room_messages",
+          "room_id": roomId,
+          "page_number": page_number,
+        })
+      );
+      if (page_number == -1) {
+      }
+    }
+  }
+  
+  function handleLoadMessageEvent(messages, page_number) {
+    if (messages != null && messages != undefined && messages != "None") {
+      setPageNumber(page_number);
+      messages.forEach((message) => {
+        appendChatMessage(message, false);
+      });
+      toggleSpinner();
+    } else {
+      setPaginationExhausted();
+    }
+  }
 
   inputDOM.addEventListener("keyup", (event) => {
     if (event.keyCode == 13) {
       sendBtn.click();
     }
   });
-
+  
   function loadMessages() {
     socket.send(JSON.stringify({ command: "load_messages" }));
   }
-
-  function setConnectedUsersCount(users_count) {
-    users_box = document.querySelector(".users");
-    users_box.innerHTML = users_count;
-  }
-
+  
   function toggleSpinner() {
     spinner.classList.toggle("invisible");
   }
