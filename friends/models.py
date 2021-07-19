@@ -1,7 +1,11 @@
+from django.contrib.contenttypes.models import ContentType
 from notification.models import Notification
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from private_chat.utils import find_or_create_private_chat
 
@@ -28,6 +32,17 @@ class FriendList(models.Model):
         """
         if not account in self.friends.all():
             self.friends.add(account)
+            self.save()
+
+            content_type = ContentType.objects.get_for_model(self)
+            self.notifications.create(
+              target = self.user,
+              from_user = account,
+              redirect_url = f"{settings.BASE_URL}/account/{account.pk}",
+              notify_text = f"You accepted {account.username}'s friend request.",
+              content_type = content_type
+            )
+            self.save()
 
             # creating a private chat or activate an old one
             chat = find_or_create_private_chat(self.user, account)
@@ -63,6 +78,16 @@ class FriendList(models.Model):
         removee_friends_list = FriendList.objects.get(user=removee)
         removee_friends_list.remove_friend(me.user)
 
+        content_type = ContentType.objects.get_for_model(self)
+
+        self.notifications.create(
+          target=self.user,
+          from_user=removee,
+          redirect_url=f"{settings.BASE_URL}/account/{removee.pk}",
+          notify_text=f"You are no longer friends with {removee.username}",
+          content_type=content_type
+        )
+
     def is_mutual_friend(self, friend):
         if friend in self.friends.all():
             return True
@@ -79,14 +104,14 @@ class FriendRequest(models.Model):
     This model will store all friendrequests info and status
     A friendrequest has two main parts:
         SENDER: the person sending friend request
-        RECIEVER: the person receiving friend request
+        RECEIVER: the person receiving friend request
     """
 
     sender = models.ForeignKey(
         AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sender"
     )
-    reciever = models.ForeignKey(
-        AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reciever"
+    receiver = models.ForeignKey(
+        AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="receiver"
     )
 
     is_active = models.BooleanField(blank=False, null=False, default=True)
@@ -98,20 +123,42 @@ class FriendRequest(models.Model):
 
     def accept(self):
         """
-        Accept a friend request and update both sender's and reciever's friendlist
+        Accept a friend request and update both sender's and receiver's friendlist
         """
-        reciever_friendList = FriendList.objects.get(user=self.reciever)
-        if reciever_friendList:
-            reciever_friendList.add_friend(self.sender)
-            sender_friendList = FriendList.objects.get(user=self.sender)
-            if sender_friendList:
-                sender_friendList.add_friend(self.reciever)
-                self.is_active = False
-                self.save()
+        receiver_friendList = FriendList.objects.get(user=self.receiver)
+        if receiver_friendList:
+          content_type=ContentType.objects.get_for_model(self)
+
+          # Update notification for receiver
+          receiver_notification = Notification.objects.get(target=self.receiver, content_type=content_type, object_id=self.id)
+          receiver_notification.is_active = False
+          receiver_notification.redirect_url=f"{settings.BASE_URL}/account/{self.sender.pk}"
+          receiver_notification.notify_text=f"You accepted {self.sender.username}'s friend request."
+          receiver_notification.timestamp = timezone.now()
+          receiver_notification.save()
+
+          receiver_friendList.add_friend(self.sender)
+
+          sender_friendList = FriendList.objects.get(user=self.sender)
+          if sender_friendList:
+
+            #create a notification for sender
+            self.notifications.create(
+              target=self.user,
+              from_user=self.receiver,
+              redirect_url=f"{settings.BASE_URL}/account/{self.receiver.pk}/",
+              notify_text=f"You are now friend with {self.receiver.username}. Say Hello",
+              content_type=content_type
+            )
+
+            sender_friendList.add_friend(self.receiver)
+            self.is_active = False
+            self.save()
+        return receiver_notification
 
     def decline(self):
         """
-        Decline a friend request -> from reciever's perpective
+        Decline a friend request -> from receiver's perpective
         """
         self.is_active = False
         self.save()
@@ -126,3 +173,14 @@ class FriendRequest(models.Model):
     @property
     def get_cname(self):
       return "FriendRequest"
+
+@receiver(post_save, sender=FriendRequest)
+def create_notification(sender, instance, created, **kwargs):
+  if created:
+    instance.notifications.create(
+      target=instance.receiver,
+      from_user=instance.sender,
+      redirect_url=f"{settings.BASE_URL}/account/{instance.sender.pk}/",
+      notify_text=f"{instance.sender.username} sent you a friend request.",
+      content_type=instance,
+    )
