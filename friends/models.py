@@ -1,3 +1,5 @@
+from notification.models import Notification
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.conf import settings
 
@@ -13,6 +15,8 @@ class FriendList(models.Model):
     friends = models.ManyToManyField(
         AUTH_USER_MODEL, related_name="friends", blank=True
     )
+    
+    notifications = GenericRelation(Notification)
 
     def __str__(self):
         return self.user.username
@@ -64,6 +68,11 @@ class FriendList(models.Model):
             return True
         return False
 
+    @property
+    def get_cname(self):
+      # For determine what kind of object is associated with Notification
+      return "FriendList"
+
 
 class FriendRequest(models.Model):
     """
@@ -82,6 +91,7 @@ class FriendRequest(models.Model):
 
     is_active = models.BooleanField(blank=False, null=False, default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    notifications = GenericRelation(Notification)
 
     def __str__(self):
         return self.sender.username
@@ -112,3 +122,7 @@ class FriendRequest(models.Model):
         """
         self.is_active = False
         self.save()
+
+    @property
+    def get_cname(self):
+      return "FriendRequest"
