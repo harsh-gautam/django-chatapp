@@ -1,25 +1,23 @@
-
-#chat-area{
-    height: 600px;
-    border: 2px solid black;
-    margin-bottom: 10px;
+#chat-area {
+  height: 500px;
+  border: 2px solid black;
+  margin-bottom: 10px;
 }
 
 #chat-area > p {
-    width: 51%;
+  width: 100%;
 }
 
-.send{
-    display: flex !important;
-    float: right;
-    justify-content: flex-end !important;
-    color: white;
+.send {
+  display: flex !important;
+  float: right;
+  justify-content: flex-end !important;
+  color: black;
 }
 
-.reply{
-    display: flex !important;
-    float: left;
-    justify-content: flex-start !important;
-    color: white;
+.reply {
+  display: flex !important;
+  float: left;
+  justify-content: flex-start !important;
+  color: black;
 }
-

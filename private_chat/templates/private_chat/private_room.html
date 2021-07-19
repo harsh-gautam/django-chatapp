@@ -1,7 +1,11 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Private_Chat
-{%endblock title %} {% block head %}
+{% extends 'base.html' %} {% load static %} 
+{% block title %}
+Private_Chat
+{%endblock title %} 
+{% block head %}
 <link rel="stylesheet" href="{% static 'css/room.css' %}" />
-{% endblock head %} {% block body %}
+{% endblock head %} 
+{% block body %}
 <style type="text/css">
   .profile-image{
 		width: 33px;
@@ -258,7 +262,7 @@
     function createMessage(message, author, current_user, isNewMessage) {
       
       let p_tag = document.createElement("p");
-      p_tag.classList.add("my-2", "bg-secondary", "p-2");
+      p_tag.classList.add("my-2", "bg-light", "p-2");
       
       let span_name = document.createElement("span");
       span_name.classList.add("mx-2");
