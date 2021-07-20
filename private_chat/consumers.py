@@ -22,6 +22,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
 
   # Connect to the Consumer
   async def connect(self):
+    print("Private Chat Consumer Connect: ", self.scope['user'])
     await self.accept()  # Let everyone connect
     self.room_id = None
 
