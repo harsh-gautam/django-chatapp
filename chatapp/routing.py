@@ -6,6 +6,7 @@ from django.urls import re_path
 
 from chat.consumers import ChatRoomConsumer
 from private_chat.consumers import PrivateChatConsumer
+from notification.consumers import NotificationConsumer
 
 application = ProtocolTypeRouter(
     {
@@ -13,6 +14,7 @@ application = ProtocolTypeRouter(
           AuthMiddlewareStack(
               URLRouter(
                 [
+                  re_path(r'', NotificationConsumer.as_asgi()),
                   re_path(
                     r"^ws/chat/room/(?P<room_title>\w+)/$",
                     ChatRoomConsumer.as_asgi(),
