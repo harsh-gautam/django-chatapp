@@ -10,104 +10,11 @@
     {% block head%} {% endblock head%}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">CHAT-APP</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item mx-2">
-    <a class="nav-link active" aria-current="page" href="/">Home</a>
-  </li>
-    <form method="get" action="{% url 'search' %}" class="d-flex">
-        <input class="form-control me-2" name="q" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
-      </ul>
-
-    <span class="d-flex">
-      {% if user.is_authenticated %}
-      <div class="btn-group mx-3 my-auto" id="id_general_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="30" height="30">
-        <ul class="dropdown-menu dropdown-menu-end" id="id_general_notifications_area">
-          <li><button class="btn btn-outline-secondary">Mark all as read</a></li>
-          <li><hr class="dropdown-divider" id="id_general_notification_divider"></li>
-          <!-- New notifications will be added here -->
-        </ul>
-      </div>
-      <div class="btn-group mx-3 my-auto" id="id_chat_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="30" height="30">
-        <ul class="dropdown-menu dropdown-menu-end" id="id_chat_notifications">
-          <li><button class="btn btn-outline-secondary">Go to Chat</a></li>
-          <li><hr class="dropdown-divider" id="id_chat_notification_divider"></li>
-          <!-- New notifications will be added here -->
-        </ul>
-      </div>
-        <div class="btn-group mx-3" id="id_user_profile">
-          <img class="border border-2 border-light rounded-circle dropdown-toggle" src="{{request.user.profile_image.url}}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="40" height="40">
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <span class="dropdown-item nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'account:profile' user_id=request.user.id %}">My Profile</a>
-              </span>
-            </li>
-            <li>
-              <span class="dropdown-item nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'account:logout' %}">Logout</a>
-              </span>
-            </li>
-          </ul>
-        </div>
-      {% else %}
-        <span class="nav-item mx-2">
-          <a class="nav-link active" aria-current="page" href="{% url 'account:login' %}">Login</a>
-        </span>
-        <span class="nav-item mx-2">
-          <a class="nav-link active" aria-current="page" href="{% url 'account:register' %}">Sign Up</a>
-        </span>
-      {% endif %}
-    </span>
-
-    </div>
-  </div>
-</nav>
+{% include 'navbar.html' %}
 <div class="container my-4">
 
     {% block body %} {% endblock body %}
     </div>
     {% block script %} {% endblock script %}
-    <script>
-      setupWebSocket()
-      function setupWebSocket(){
-        url = `ws://${window.location.host}/`;
-
-        notificationSocket = new WebSocket(url);
-
-        notificationSocket.onopen = function open() {
-          console.log("Notification WebSocket Connection Open.");
-        };
-
-        if (notificationSocket.readyState == WebSocket.OPEN) {
-          notificationSocket.onopen();
-        }
-
-        notificationSocket.onmessage = function (e) {
-          const data = JSON.parse(e.data);
-          console.log("Notification Data: ", data)
-        };
-
-        notificationSocket.onerror = function (e) {
-          console.log("WebSocket Error: ");
-          console.log(e);
-        };
-
-        notificationSocket.onclose = function (e) {
-          console.log("WebSocket Closed: ");
-          console.log(e);
-        };
-      }
-    </script>
 </body>
 </html>
