@@ -93,4 +93,10 @@
       console.log(e);
     };
   }
+
+  let go_to_chat = document.getElementById("id_go_to_chat")
+  go_to_chat.addEventListener("click", () => {
+    console.log("go to chat button clicked")
+    window.location.href = "{% url 'private_chat:private-room' %}"
+  })
 </script>
