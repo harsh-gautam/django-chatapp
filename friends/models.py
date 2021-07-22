@@ -30,6 +30,7 @@ class FriendList(models.Model):
         Add a friend
         params -> account : the user to add to friendlist
         """
+        print(f"Adding Friend: user->{self.user} account->{account}")
         if not account in self.friends.all():
             self.friends.add(account)
             self.save()
@@ -39,7 +40,7 @@ class FriendList(models.Model):
               target = self.user,
               from_user = account,
               redirect_url = f"{settings.BASE_URL}/account/{account.pk}",
-              notify_text = f"You accepted {account.username}'s friend request.",
+              notify_text = f"You are now friends with {account.username}. Say Hello",
               content_type = content_type
             )
             self.save()
@@ -127,8 +128,8 @@ class FriendRequest(models.Model):
         """
         receiver_friendList = FriendList.objects.get(user=self.receiver)
         if receiver_friendList:
-          content_type=ContentType.objects.get_for_model(self)
 
+          content_type=ContentType.objects.get_for_model(self)
           # Update notification for receiver
           receiver_notification = Notification.objects.get(target=self.receiver, content_type=content_type, object_id=self.id)
           receiver_notification.is_active = False
@@ -137,24 +138,32 @@ class FriendRequest(models.Model):
           receiver_notification.timestamp = timezone.now()
           receiver_notification.save()
 
-          receiver_friendList.add_friend(self.sender)
+          receiver_friendList.add_friend(self.sender) # --> This will create notification for receiver
+
+          # self.notifications.create(
+          #   target = self.receiver,
+          #   from_user = self.sender,
+          #   redirect_url = f"{settings.BASE_URL}/account/{self.sender.pk}",
+          #   notify_text = f"You accepted {self.sender.username}'s friend request.",
+          #   content_type = content_type
+          # )
 
           sender_friendList = FriendList.objects.get(user=self.sender)
           if sender_friendList:
 
-            #create a notification for sender
-            self.notifications.create(
-              target=self.user,
-              from_user=self.receiver,
-              redirect_url=f"{settings.BASE_URL}/account/{self.receiver.pk}/",
-              notify_text=f"You are now friend with {self.receiver.username}. Say Hello",
-              content_type=content_type
-            )
+            # #create a notification for sender
+            # self.notifications.create(
+            #   target=self.sender,
+            #   from_user=self.receiver,
+            #   redirect_url=f"{settings.BASE_URL}/account/{self.receiver.pk}/",
+            #   notify_text=f"For sender - You are now friend with {self.receiver.username}. Say Hello",
+            #   content_type=content_type
+            # )
 
-            sender_friendList.add_friend(self.receiver)
+            sender_friendList.add_friend(self.receiver) # --> This will also create notification for sender
             self.is_active = False
             self.save()
-        return receiver_notification
+        # return receiver_notification
 
     def decline(self):
         """
