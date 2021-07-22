@@ -67,7 +67,7 @@ def account_view(request, *args, **kwargs):
         is_self(boolean) (is this your profile?)
             is_friend(boolean) (if not your profile then is this your friend?)
                 1: Not a friend yet
-                2: Other user sent you a friend request ( You recieved friend request)
+                2: Other user sent you a friend request ( You received friend request)
                 3: You send that user a friend request
     """
     context = {}
@@ -128,7 +128,7 @@ def account_view(request, *args, **kwargs):
             is_self = False
         else:
           try:
-              friend_requests = FriendRequest.objects.filter(reciever=user, is_active=True)
+              friend_requests = FriendRequest.objects.filter(receiver=user, is_active=True)
           except:
               pass
 

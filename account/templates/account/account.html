@@ -151,8 +151,10 @@
   if (sendFriendRequestBtn != null) {
       sendFriendRequestBtn.addEventListener("click", function () {
           const csrfToken = "{{ csrf_token }}";
-          sendFriendRequest(SEND_REQ_URL, {{ id }}, csrfToken, onFriendRequestSent);
-  })
+          const id = "{{id}}"
+          sendFriendRequest(SEND_REQ_URL, id, csrfToken, onFriendRequestSent);
+        }
+      )
   }
 
   // For accepting friend requests

@@ -52,20 +52,21 @@ def send_friend_request(request, *args, **kwargs):
     user = request.user
     payload = {'response': None}
     if user.is_authenticated and request.method == "POST":
-        # reciever_user_id = request.POST['reciever_user_id']
-        reciever_user_id = json.loads(request.body)['reciever_user_id']
+        # receiver_user_id = request.POST['receiver_user_id']
+        print(request.body)
+        receiver_user_id = json.loads(request.body)['receiver_user_id']
 
-        if reciever_user_id:
-            reciever = Account.objects.get(pk=reciever_user_id)
+        if receiver_user_id:
+            receiver = Account.objects.get(pk=receiver_user_id)
             try:
-                friend_request = FriendRequest.objects.filter(sender=user, reciever=reciever, is_active=True)
+                friend_request = FriendRequest.objects.filter(sender=user, receiver=receiver, is_active=True)
                 if friend_request:
                     payload['result'] = "error"
                     payload['response'] = "You already sent them friend request."
                 else:
                     raise Exception()
             except Exception:
-                friend_request = FriendRequest(sender=user, reciever=reciever)
+                friend_request = FriendRequest(sender=user, receiver=receiver)
                 friend_request.save()
                 payload['result'] = "success"
                 payload['response'] = "Friend Request Sent"
@@ -115,13 +116,13 @@ def cancel_friend_request(request):
     user = request.user
     payload = {"result": "error", "response": None}
     if user.is_authenticated and request.method == "GET":
-        reciever_id = request.GET['reciever_id']
-        if reciever_id:
+        receiver_id = request.GET['receiver_id']
+        if receiver_id:
             try:
-                reciever_acc = Account.objects.get(pk=reciever_id)
-                if reciever_acc:
+                receiver_acc = Account.objects.get(pk=receiver_id)
+                if receiver_acc:
                     try:
-                        friend_req = FriendRequest.objects.filter(sender=user, reciever=reciever_acc, is_active=True)
+                        friend_req = FriendRequest.objects.filter(sender=user, receiver=receiver_acc, is_active=True)
                         if len(friend_req) > 1:
                             for req in friend_req:
                                 req.cancel()
