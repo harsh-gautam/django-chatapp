@@ -1,0 +1,164 @@
+{% load static %}
+<script>
+  /*
+		Initialize the general notification menu
+		Called when page loads.
+	*/
+  function setupGeneralNotificationsMenu(){
+		var notificationArea = document.getElementById("id_general_notifications_area")
+
+		if(notificationArea != null){
+			listItem = createGeneralNotificationListItem("id_no_general_notifications")
+
+			listItem.innerHTML = "You have no notifications."
+			notificationArea.appendChild(listItem)
+		}
+	}
+
+  /*
+		Remove the element that says "There are no notifications".
+	*/
+	function clearNoGeneralNotificationsItem(){
+    console.log("Clearing No Notification Item")
+		var element = document.getElementById("id_no_general_notifications")
+		if(element != null && element != "undefined"){
+			document.getElementById("id_general_notifications_area").removeChild(element)
+		}
+	}
+
+  	/*
+		The card that each notification sits in
+	*/
+	function createGeneralNotificationListItem(listId){
+		var item = document.createElement("li")
+		if(listId != "undefined"){
+			item.id = listId
+		}
+		item.classList.add("list-group-item", "border-bottom")
+		return item
+	}
+
+  	/*
+		Timestamp at the bottom of each notification card
+	*/
+	function createGeneralTimestampElement(notification){
+		var timestamp = document.createElement("span")
+		timestamp.classList.add("d-block", "small", "py-1", "fw-bolder")
+		timestamp.innerHTML = notification['natural_timestamp']
+		timestamp.id = "id_timestamp_" + notification['notification_id']
+		return timestamp
+	}
+
+  /*
+		Circular image icon that can be in a notification card
+	*/
+	// function createGeneralProfileImageThumbnail(notification){
+	// 	var img = document.createElement("img")
+	// 	img.classList.add("notification-thumbnail-image", "img-fluid", "rounded-circle", "mr-2")
+	// 	img.src = "{% static 'images/default_profile.png' %}"
+	// 	img.id = "id_general_img_" + notification['notification_id']
+	// 	return img
+	// }
+
+  function createFriendRequestElement(notification){
+    let listItemElem = createGeneralNotificationListItem(`id_notification_${notification["id"]}`)
+    listItemElem.innerHTML = notification["notify_text"]
+    listItemElem.addEventListener("click", () => console.log("clicked notification") /*TODO: Do something later */)
+
+    timestampElem = createGeneralTimestampElement(notification)
+
+    if(notification["is_active"] === "True"){
+      acceptBtn = document.createElement("button")
+      acceptBtn.classList.add("btn", "btn-success", "mx-2")
+      acceptBtn.innerHTML = "Accept"
+      acceptBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        sendFriendRequestSocket("accept", notification["notification_id"])
+      })
+      acceptBtn.id = "id_accept_notification_" + notification["notification_id"]
+
+      declineBtn = document.createElement("button")
+      declineBtn.classList.add("btn", "btn-success", "mx-2")
+      declineBtn.innerHTML = "Decline"
+      declineBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        sendFriendRequestSocket("decline", notification["notification_id"])
+      })
+      declineBtn.id = "id_decline_notification_" + notification["notification_id"]
+
+      span = document.createElement("span")
+      span.classList.add("d-flex", "flex-row", "justify-content-center")
+      span.appendChild(declineBtn)
+      span.appendChild(acceptBtn)
+
+      listItemElem.appendChild(timestampElem)
+      listItemElem.appendChild(span)
+
+      return listItem
+    }
+    else{
+      listItemElem.appendChild(timestampElem)
+      return listItemElem
+    }
+  }
+
+  function createFriendListElement(notification){
+    listItemElem = createGeneralNotificationListItem(`id_notification_${notification["notification_id"]}`)
+    
+    listItemElem.addEventListener("click", () => console.log("clicked notification") /*TODO: Do something later */)
+
+    if(notification["notify_text"].length > 50){
+      listItemElem.innerHTML = notification["notify_text"].slice(0, 50) + "..."
+    }else{
+      listItemElem.innerHTML = notification["notify_text"]
+    }
+    timestampElem = createGeneralTimestampElement(notification)
+    listItemElem.appendChild(timestampElem)
+    return listItemElem
+  }
+
+  /*
+		Append a general notification to the BOTTOM of the list.
+	*/
+	function appendBottomGeneralNotification(notification){
+    console.log("Appending new notification")
+
+    switch(notification['notification_type']) {
+
+      case "FriendRequest":
+        notificationArea = document.getElementById("id_general_notifications_area")
+        console.log("Notification Area: ", notificationArea.children)
+        frItem = createFriendRequestElement(notification)
+        console.log("Friend Request Notification: ", frItem)
+        notificationArea.appendChild(frItem)
+        break;
+
+      case "FriendList":
+        notificationArea = document.getElementById("id_general_notifications_area")
+        console.log("Notification Area: ", notificationArea.children)
+        flItem = createFriendListElement(notification)
+        console.log("Friend List Notification: ", flItem)
+        notificationArea.appendChild(flItem)
+        break;
+
+      default:
+        // code block
+    }
+    // preloadImage(notification['from']['image_url'], assignGeneralImgId(notification))
+  }
+
+  /*
+    Handle General Notifications
+  */
+
+  function handleGeneralNotifications(notifications, new_page_number){
+    if(notifications.length > 0){
+      clearNoGeneralNotificationsItem();
+      notifications.forEach(notification => {
+        console.log("Handling Notification: ", notification)
+        appendBottomGeneralNotification(notification)
+      });
+    }
+  };
+
+</script>

@@ -18,40 +18,86 @@
 
     <span class="d-flex">
       {% if user.is_authenticated %}
-      <div class="btn-group mx-3 my-auto" id="id_general_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="30" height="30">
-        <ul class="dropdown-menu dropdown-menu-end" id="id_general_notifications_area">
-          <li>
-            <button class="btn btn-outline-secondary">Mark as read</button>
+
+      <!-- Chat Dropdown -->
+      <div class="btn-group dropstart mx-3 my-auto" id="id_chat_notifications">
+        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
+        <div class="dropdown-menu p-0 top-100 end-50" id="id_chat_notifications">
+          <div class="card" style="width: 20rem;">
+            <div class="card-header">
+              <span class="me-2 fw-bold">Messages</span>
+              <button class="btn btn-outline-primary" id="id_go_to_chat">Go to Messages</button>
+                <span class="d-none" id="id_page_number">1</span>
+            </div>
+            <ul class="list-group list-group-flush" id="id_chat_notifications_area">
+            <li class="list-group-item border-bottom">
+              <span></span>
+              <span class="d-block small py-1 fw-bolder">You are now friends with harsh27. Say Hello</span>
+            </li>
+          </ul> 
+          </div>
+          </div>
+      </div>
+      <!-- Chat Dropdown  -->
+
+      <!-- Notification Dropdown  -->
+      <div class="btn-group dropstart mx-3 my-auto" id="id_general_notifications">
+        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
+        <div class="dropdown-menu p-0 top-100 end-50">
+          <div class="card" style="width: 20rem;">
+          <div class="card-header">
+            <span class="me-2 fw-bold">NOTIFICATIONS</span>
+            <button class="btn btn-outline-primary">Mark as read</button>
               <span class="d-none" id="id_page_number">1</span>
-            </li>
-          <li><hr class="dropdown-divider" id="id_general_notification_divider"></li>
+          </div>
+          <ul class="list-group list-group-flush" id="id_general_notifications_area">
           <!-- New notifications will be added here -->
-        </ul>
-      </div>
-      <div class="btn-group mx-3 my-auto" id="id_chat_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="30" height="30">
-        <ul class="dropdown-menu dropdown-menu-end" id="id_chat_notifications">
-          <li><button class="btn btn-outline-secondary" id="id_go_to_chat">Go to Chat</a></li>
-          <li><hr class="dropdown-divider" id="id_chat_notification_divider"></li>
-          <!-- New notifications will be added here -->
-        </ul>
-      </div>
-        <div class="btn-group mx-3" id="id_user_profile">
-          <img class="border border-2 border-light rounded-circle dropdown-toggle" src="{{request.user.profile_image.url}}" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-haspopup="true" alt="User Profile Image" width="40" height="40">
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <span class="dropdown-item nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'account:profile' user_id=request.user.id %}">My Profile</a>
-              </span>
-            </li>
-            <li>
-              <span class="dropdown-item nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'account:logout' %}">Logout</a>
-              </span>
-            </li>
-          </ul>
+          <!-- <li class="list-group-item border-bottom">
+            <span>You are no longer friends with harsh27</span>
+            <span class="d-block small py-1 fw-bolder">a minute ago</span>
+          </li>
+          <li class="list-group-item border-bottom">
+            <span >You are now friends with harsh27. Say Hello</span>
+            <span class="d-block small py-1 fw-bolder">a minute ago</span>
+          </li>
+          <li class="list-group-item border-bottom">
+            <span>
+              Harsh send a friend request 
+            </span>
+            <span class="d-block small py-1 fw-bolder">a minute ago</span>
+            <span class="d-flex flex-row justify-content-center">
+              <button class="btn btn-success mx-2">Accept</button>
+              <button class="btn btn-danger mx-2">Decline</button>
+            </span>
+          </li>
+          <li class="list-group-item border-bottom"><span>You are now friends with harsh27. Say Hello</span>
+            <span class="d-block small py-1 fw-bolder">a minute ago</span></li>
+          <li class="list-group-item border-bottom"><span>You are now friends with harsh27. Say Hello</span>
+            <span class="d-block small py-1 fw-bolder">a minute ago</span>
+          </li> -->
+        </ul> 
         </div>
+      </div>
+      </div>
+      <!-- Notification Dropdown  -->
+
+      <!-- Profile Dropdown  -->
+      <div class="btn-group dropstart mx-3" id="id_user_profile">
+        <img class="border border-2 border-light rounded-circle dropdown-toggle" src="{{request.user.profile_image.url}}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="40" height="40">
+        <ul class="dropdown-menu p-0 top-100 end-50">
+          <li>
+            <span class="list-group-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'account:profile' user_id=request.user.id %}">My Profile</a>
+            </span>
+          </li>
+          <li>
+            <span class="list-group-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'account:logout' %}">Logout</a>
+            </span>
+          </li>
+        </ul>
+      </div>
+      <!-- Profile Dropdown  -->
       {% else %}
         <span class="nav-item mx-2">
           <a class="nav-link active" aria-current="page" href="{% url 'account:login' %}">Login</a>
@@ -65,7 +111,7 @@
     </div>
   </div>
 </nav>
-
+{% include 'snippets/general_notifications.html'%}
 <script>
   setupWebSocket()
   function setupWebSocket(){
@@ -75,6 +121,7 @@
 
     notificationSocket.onopen = function open() {
       console.log("Notification WebSocket Connection Open.");
+      setupGeneralNotificationsMenu()
       notificationSocket.send(JSON.stringify({'command':'get_general_notifications', 'page_number': 1}));
     };
 
@@ -83,10 +130,9 @@
     }
 
     notificationSocket.onmessage = function (e) {
-      console.log("Socket Message Evenet: ", e)
       const data = JSON.parse(e.data);
       console.log("Notification Data: ", data)
-      if(data.msg_type === 0){
+      if(data.msg_type === "0"){
         handleGeneralNotifications(data['notifications'], data['new_page_number'])
       }
     };
@@ -105,10 +151,6 @@
   function setPageNumber(page_number){
     elem = document.getElementById("id_page_number");
     elem.innerText = page_number;
-  };
-
-  function handleGeneralNotifications(notifications, new_page_number){
-    console.log(notifications, new_page_number)
   };
 
   let go_to_chat = document.getElementById("id_go_to_chat")
