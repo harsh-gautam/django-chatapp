@@ -53,11 +53,16 @@
       <!-- Notification Dropdown  -->
       <div class="btn-group dropstart mx-3 my-auto" id="id_general_notifications">
         <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
+        <span id="id_general_notifications_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          
+          <span class="visually-hidden">unread notifications</span>
+        </span>  
+      </img>
         <div class="dropdown-menu p-0 top-100 end-50">
           <div class="card" style="width: 20rem;">
           <div class="card-header">
             <span class="me-2 fw-bold">NOTIFICATIONS</span>
-            <button class="btn btn-outline-primary">Mark as read</button>
+            <button class="btn btn-outline-primary" onclick="setGeneralNotificationsAsRead()">Mark as read</button>
               <span class="d-none" id="id_general_page_number">1</span>
           </div>
           <ul class="list-group list-group-flush" id="id_general_notifications_area">
@@ -134,6 +139,7 @@
       console.log("Notification WebSocket Connection Open.");
       setupGeneralNotificationsMenu()
       notificationSocket.send(JSON.stringify({'command':'get_general_notifications', 'page_number': 1}));
+      getUnreadGeneralNotificationsCount()
     };
 
     if (notificationSocket.readyState == WebSocket.OPEN) {
@@ -162,6 +168,13 @@
       // Received a refreshed notifications payload
       if(data.msg_type === '3'){
         refreshGeneralNotificationsData(data['notifications'])
+      }
+      // Received a new notification payload
+      if(data.msg_type === '4'){
+        handleNewGeneralNotificationsData(data['notifications'])
+      }
+      if(data.msg_type == '5'){
+			setUnreadGeneralNotificationsCount(data['count'])
       }
     };
 

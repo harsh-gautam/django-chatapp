@@ -283,9 +283,101 @@
 			})
 		}
 	}
+  /*
+		Received a payload from socket containing NEW notifications
+		Called every GENERAL_NOTIFICATION_INTERVAL
+	*/
+	function handleNewGeneralNotificationsData(notifications){
+    	if(notifications.length > 0){
+    		clearNoGeneralNotificationsItem()
+    		notifications.forEach(notification => {
+
+    			submitNewGeneralNotificationToCache(notification)
+
+				setGeneralOldestTimestamp(notification['timestamp'])
+				setGeneralNewestTimestamp(notification['timestamp'])
+			})
+	    }
+	}
+
+  /*
+		Append to top OR update a div that already exists.
+		Called by 'handleNewGeneralNotificationsData'
+	*/
+	function submitNewGeneralNotificationToCache(notification){
+		var result = generalCachedNotifList.filter(function(n){ 
+			return n['notification_id'] === notification['notification_id']
+		})
+		// This notification does not already exist in the list
+		if(result.length == 0){
+			generalCachedNotifList.push(notification)
+
+			// append to top of list
+			appendTopGeneralNotification(notification)
+		}
+		// This notification already exists in the list
+		else{
+			// find the div and update it.
+			refreshGeneralNotificationsList(notification)
+		}
+	}
+
+  function appendTopGeneralNotification(notification){
+
+    switch(notification['notification_type']) {
+
+      case "FriendRequest":
+        notificationContainer = document.getElementById("id_general_notifications_area")
+        card = createFriendRequestElement(notification)
+        notificationContainer.insertBefore(card, notificationContainer.childNodes[0]);
+        break;
+
+      case "FriendList":
+        notificationContainer = document.getElementById("id_general_notifications_area")
+        card = createFriendListElement(notification)
+        notificationContainer.insertBefore(card, notificationContainer.childNodes[0]);
+        break;
+
+      default:
+        // code block
+    }
+  }
+
+    /*
+		Set the number of unread notifications.
+	*/
+	function setUnreadGeneralNotificationsCount(count){
+		var countElement = document.getElementById("id_general_notifications_count")
+		if(count > 0){
+			countElement.style.background = "red"
+			countElement.style.display = "block"
+			countElement.innerHTML = count
+		}
+		else{
+			countElement.style.background = "transparent"
+			countElement.style.display = "none"
+		}
+	}
 
 </script>
 <script>
+
+  	/*
+		Set the number of unread notifications.
+	*/
+	function setUnreadGeneralNotificationsCount(count){
+		var countElement = document.getElementById("id_general_notifications_count")
+		if(count > 0){
+			countElement.style.background = "red"
+			countElement.style.display = "block"
+			countElement.innerHTML = count
+		}
+		else{
+			countElement.style.background = "transparent"
+			countElement.style.display = "none"
+		}
+	}
+  
   function setOnGeneralNotificationScrollListener(){
 		var menu = document.getElementById("id_general_notifications_area")
 		if(menu != null ){
@@ -362,6 +454,8 @@
 	function startGeneralNotificationService(){
 		if("{{request.user.is_authenticated}}" == "True"){
 			setInterval(refreshGeneralNotifications, GENERAL_NOTIFICATION_INTERVAL)
+      setInterval(getNewGeneralNotifications, GENERAL_NOTIFICATION_INTERVAL)
+      setInterval(getUnreadGeneralNotificationsCount, GENERAL_NOTIFICATION_INTERVAL)
 		}
 	}
 
@@ -378,6 +472,20 @@
 			notificationSocket.send(JSON.stringify({
 				"command": "get_general_notifications",
 				"page_number": pageNumber,
+			}));
+		}
+	}
+
+  	/*
+		Retrieve any new notifications
+		Called every GENERAL_NOTIFICATION_INTERVAL seconds
+	*/
+	function getNewGeneralNotifications(){
+		newestTimestamp = document.getElementById("id_general_newest_timestamp").innerHTML
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_new_general_notifications",
+				"newest_timestamp": newestTimestamp,
 			}));
 		}
 	}
@@ -415,5 +523,31 @@
 	}
 
 	setInitialTimestamp()
+
+  	/*
+		Retrieve the number of unread notifications. (This is the red dot in the notifications icon)
+		Called every GENERAL_NOTIFICATION_INTERVAL
+	*/
+	function getUnreadGeneralNotificationsCount(){
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_unread_general_notifications_count",
+			}));
+		}
+	}
+
+	/*
+		Sets all the notifications currently visible as "read"
+	*/
+	function setGeneralNotificationsAsRead(){
+		if("{{request.user.is_authenticated}}"){
+			oldestTimestamp = document.getElementById("id_general_oldest_timestamp").innerHTML
+			notificationSocket.send(JSON.stringify({
+				"command": "mark_notifications_read",
+			}));
+			getUnreadGeneralNotificationsCount()
+		}
+	}
+
 
 </script>

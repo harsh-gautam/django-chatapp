@@ -1,3 +1,4 @@
+from typing import Text
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.core.paginator import Paginator
@@ -86,14 +87,41 @@ class NotificationConsumer(AsyncWebsocketConsumer):
       raise ClientError("ERROR", "Something went wrong.")
     else:
       payload = json.loads(payload)
-      await self.send_refreshed_general_notifications(payload["notifications"])
-
-  async def send_refreshed_general_notifications(self, notifications):
-    await self.send(text_data=json.dumps({
+      await self.send(text_data=json.dumps({
       "msg_type": 3,
-      "notifications": notifications,
+      "notifications": payload["notifications"],
     }))
 
+  async def get_new_general_notifications(self, data):
+    try:
+      payload = await self.db_get_new_general_notifications(self.scope["user"], data.get("newest_timestamp", None))
+      if payload is not None:
+        payload = json.loads(payload)
+        await self.send(text_data=json.dumps({
+          "msg_type": 4,
+          "notifications": payload["notifications"],
+        }))
+      else:
+        raise ClientError("ERROR", "Error fetching new notifications.")
+    except ClientError as e:
+      await self.handle_client_error(e)
+
+  async def get_unread_general_notifications_count(self, data):
+    try:
+      payload = await self.db_get_unread_general_notification_count(self.scope["user"])
+      if payload is not None:
+        payload = json.loads(payload)
+        await self.send(text_data=json.dumps({
+          "msg_type": 5,
+          "count": payload["count"]
+        }))
+      else:
+        raise ClientError("COUNT_ERROR", "Cannot fetch notifications count.")
+    except ClientError as e:
+      await self.handle_client_error(e)
+
+  async def mark_notifications_read(self, data):
+    await self.db_mark_notifications_read(self.scope["user"])
 
   async def handle_client_error(self, e):
     """
@@ -111,6 +139,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     "get_general_notifications": get_general_notifications,
     "handle_friend_request": handle_friend_request,
     "refresh_general_notifications": refresh_general_notifications,
+    "get_new_general_notifications": get_new_general_notifications,
+    "get_unread_general_notifications_count": get_unread_general_notifications_count,
+    "mark_notifications_read": mark_notifications_read
   }
 
   @database_sync_to_async
@@ -199,3 +230,54 @@ class NotificationConsumer(AsyncWebsocketConsumer):
       raise ClientError("User must be authenticated to get notifications.")
 
     return json.dumps(payload) 
+
+  @database_sync_to_async
+  def db_get_new_general_notifications(self, user, newest_timestamp):
+    """
+    Retrieve any notifications newer than the newest_timestatmp on the screen.
+    """
+    payload = {}
+    if user.is_authenticated:
+      timestamp = newest_timestamp[0:newest_timestamp.find("+")] # remove timezone because who cares
+      timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
+      friend_request_ct = ContentType.objects.get_for_model(FriendRequest)
+      friend_list_ct = ContentType.objects.get_for_model(FriendList)
+      notifications = Notification.objects.filter(target=user, content_type__in=[friend_request_ct, friend_list_ct], timestamp__gt=timestamp, read=False).order_by('-timestamp')
+      s = LazyNotificationEncoder()
+      payload['notifications'] = s.serialize(notifications)
+    else:
+      raise ClientError("User must be authenticated to get notifications.")
+
+    return json.dumps(payload) 
+
+  @database_sync_to_async
+  def db_get_unread_general_notification_count(self, user):
+    payload = {}
+    if user.is_authenticated:
+      friend_request_ct = ContentType.objects.get_for_model(FriendRequest)
+      friend_list_ct = ContentType.objects.get_for_model(FriendList)
+      notifications = Notification.objects.filter(target=user, content_type__in=[friend_request_ct, friend_list_ct])
+
+      unread_count = 0
+      if notifications:
+        for notification in notifications.all():
+          if not notification.read:
+            unread_count = unread_count + 1
+      payload['count'] = unread_count
+      return json.dumps(payload)
+    else:
+      raise ClientError("User must be authenticated to get notifications.")
+    return None
+
+  @database_sync_to_async
+  def db_mark_notifications_read(self, user):
+    """
+    marks a notification as "read"
+    """
+    if user.is_authenticated:
+      notifications = Notification.objects.filter(target=user)
+      if notifications:
+        for notification in notifications.all():
+          notification.read = True
+          notification.save()
+    return
