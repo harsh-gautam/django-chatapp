@@ -1,5 +1,52 @@
 {% load static %}
 <script>
+  const GENERAL_NOTIFICATION_INTERVAL = 4000
+	const GENERAL_NOTIFICATION_TIMEOUT = 5000
+  
+  let generalCachedNotifList = []  
+	
+  /*
+    Append to bottom. 
+    Used for
+      1. Page load
+      2. pagination
+      3. Refresh
+    Called by 'handleGeneralNotificationsData' &  'refreshGeneralNotificationsData'
+  */
+  function submitGeneralNotificationToCache(notification){
+      let result = generalCachedNotifList.filter(function(n){ 
+        return n['notification_id'] === notification['notification_id']
+      })
+      // This notification does not already exist in the list
+      if(result.length == 0){
+        generalCachedNotifList.push(notification)
+
+        // append to bottom of list
+        appendBottomGeneralNotification(notification)
+      }
+      // This notification already exists in the list
+      else{
+        // find the notification and update it.
+        refreshGeneralNotificationsList(notification)
+      }
+    }
+
+  function refreshGeneralNotificationsList(notification){
+		notificationContainer = document.getElementById("id_general_notifications_area")
+
+		if(notificationContainer != null){
+			divs = notificationContainer.childNodes
+
+			divs.forEach(function(item){
+				// item
+				if(item.id == ("id_notification_" + notification['notification_id'])){
+					refreshNotificationItem(item, notification);
+				}
+			})
+		}
+	}
+
+
   /*
 		Initialize the general notification menu
 		Called when page loads.
@@ -61,13 +108,15 @@
 	// }
 
   function createFriendRequestElement(notification){
-    let listItemElem = createGeneralNotificationListItem(`id_notification_${notification["id"]}`)
+    let listItemElem = createGeneralNotificationListItem(`id_general_notification_${notification["notification_id"]}`)
     listItemElem.innerHTML = notification["notify_text"]
     listItemElem.addEventListener("click", () => console.log("clicked notification") /*TODO: Do something later */)
 
     timestampElem = createGeneralTimestampElement(notification)
+    console.log("Notification Status", notification["is_active"])
 
     if(notification["is_active"] === "True"){
+      
       acceptBtn = document.createElement("button")
       acceptBtn.classList.add("btn", "btn-success", "mx-2")
       acceptBtn.innerHTML = "Accept"
@@ -78,7 +127,7 @@
       acceptBtn.id = "id_accept_notification_" + notification["notification_id"]
 
       declineBtn = document.createElement("button")
-      declineBtn.classList.add("btn", "btn-success", "mx-2")
+      declineBtn.classList.add("btn", "btn-danger", "mx-2")
       declineBtn.innerHTML = "Decline"
       declineBtn.addEventListener("click", e => {
         e.stopPropagation();
@@ -87,14 +136,15 @@
       declineBtn.id = "id_decline_notification_" + notification["notification_id"]
 
       span = document.createElement("span")
+      span.id = "id_general_notification_buttons_" +  notification["notification_id"]
       span.classList.add("d-flex", "flex-row", "justify-content-center")
-      span.appendChild(declineBtn)
       span.appendChild(acceptBtn)
+      span.appendChild(declineBtn)
 
       listItemElem.appendChild(timestampElem)
       listItemElem.appendChild(span)
 
-      return listItem
+      return listItemElem
     }
     else{
       listItemElem.appendChild(timestampElem)
@@ -115,6 +165,25 @@
     timestampElem = createGeneralTimestampElement(notification)
     listItemElem.appendChild(timestampElem)
     return listItemElem
+  }
+
+  function refreshNotificationItem(item, notification){
+    item.innerHTML = notification["notify_text"]
+    item.childNodes.forEach(
+      (element) => {
+        if(element.id == ("id_general_notification_buttons_" +  notification["notification_id"])){
+          if(notification['is_active'] == "True"){
+            //do nothing
+          }
+          else{
+            item.removeChild(element)
+          }
+        }
+        if(element.id == ("id_timestamp_" + notification['notification_id'])){
+          element.innerHTML = notification["natural_timestamp"]
+        }
+      }
+    )
   }
 
   /*
@@ -142,23 +211,209 @@
         break;
 
       default:
-        // code block
     }
     // preloadImage(notification['from']['image_url'], assignGeneralImgId(notification))
   }
 
   /*
+  Send socket message to Consumer
+  */
+  function sendFriendRequestSocket(type, notification_id){
+    if(type==="accept"){
+      notificationSocket.send(JSON.stringify({
+        'command': "handle_friend_request",
+        'type': 'accept',
+        'notification_id': notification_id
+      }))
+    }
+    else{
+      notificationSocket.send(JSON.stringify({
+        'command': "decline_friend_request",
+        'type': 'decline',
+        'notification_id': notification_id
+      }))
+    }
+  }
+
+  function updateGeneralNotificationDiv(notification){
+    container = document.getElementById("id_general_notifications_area")
+    if(container != null){
+      childs = container.childNodes
+
+      childs.forEach((element)=>{
+        if(element.id === (`id_general_notification_${notification["id"]}`)){
+          updatedItem = createFriendRequestElement(notification)
+          element.replaceWith(updatedItem)
+        }
+      })
+    }
+  }
+
+  /*
     Handle General Notifications
   */
-
   function handleGeneralNotifications(notifications, new_page_number){
     if(notifications.length > 0){
       clearNoGeneralNotificationsItem();
+      
       notifications.forEach(notification => {
+        submitGeneralNotificationToCache(notification)
         console.log("Handling Notification: ", notification)
-        appendBottomGeneralNotification(notification)
+        // appendBottomGeneralNotification(notification)
+        setGeneralOldestTimestamp(notification['timestamp'])
+        setGeneralNewestTimestamp(notification['timestamp'])
       });
+      setGeneralPageNumber(new_page_number)
     }
   };
+
+  	/*
+		Received a payload from socket containing notifications currently in view.
+		Called every GENERAL_NOTIFICATION_INTERVAL
+	*/
+	function refreshGeneralNotificationsData(notifications){
+		console.log(notifications)
+		if(notifications.length > 0){
+			clearNoGeneralNotificationsItem();
+			notifications.forEach(notification => {
+				submitGeneralNotificationToCache(notification)
+
+				setGeneralOldestTimestamp(notification['timestamp'])
+				setGeneralNewestTimestamp(notification['timestamp'])
+			})
+		}
+	}
+
+</script>
+<script>
+  function setOnGeneralNotificationScrollListener(){
+		var menu = document.getElementById("id_general_notifications_area")
+		if(menu != null ){
+			menu.addEventListener("scroll", function(e){
+
+				if ((menu.scrollTop) >= (menu.scrollHeight - menu.offsetHeight)) {
+					getNextGeneralNotificationsPage()
+				}
+			});
+		}
+
+	}
+
+	setOnGeneralNotificationScrollListener()
+
+	/*
+		Called when pagination is exhausted and there is no more notifications.
+	*/
+	function setGeneralPaginationExhausted(){
+		console.log("general pagination exhausted.")
+		setGeneralPageNumber("-1")
+	}
+
+	/*
+		Sets the pagination page number.
+	*/
+	function setGeneralPageNumber(pageNumber){
+		document.getElementById("id_general_page_number").innerHTML = pageNumber
+	}
+  	/*
+		Keep track of the 'general' oldest notification in view. 
+		When 'refreshGeneralNotifications' is called, it refreshes all the notifications newer than this date but newer than 'id_general_newest_timestamp.
+	*/
+	function setGeneralOldestTimestamp(timestamp){
+		element = document.getElementById("id_general_oldest_timestamp")
+		current = element.innerHTML
+		if(Date.parse(timestamp) < Date.parse(current)){
+			element.innerHTML = timestamp
+		}
+	}
+
+	/*
+		Keep track of the 'general' newest notification in view. 
+		When 'getNewGeneralNotifications' is called, it retrieves all the notifications newer than this date.
+	*/
+	function setGeneralNewestTimestamp(timestamp){
+		element = document.getElementById("id_general_newest_timestamp")
+		current = element.innerHTML
+		if(Date.parse(timestamp) > Date.parse(current)){
+			element.innerHTML = timestamp
+		}
+		else if(current == ""){
+			element.innerHTML = timestamp
+		}
+	}
+/*
+		Refresh the notifications that are currently visible
+	*/
+	function refreshGeneralNotifications(){
+		oldestTimestamp = document.getElementById("id_general_oldest_timestamp").innerHTML
+		newestTimestamp = document.getElementById("id_general_newest_timestamp").innerHTML
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "refresh_general_notifications",
+				"oldest_timestamp": oldestTimestamp,
+				"newest_timestamp": newestTimestamp,
+			}));
+		}
+	}
+
+	/*
+		Start the functions that will be executed constantly
+	*/
+	function startGeneralNotificationService(){
+		if("{{request.user.is_authenticated}}" == "True"){
+			setInterval(refreshGeneralNotifications, GENERAL_NOTIFICATION_INTERVAL)
+		}
+	}
+
+	startGeneralNotificationService()
+
+  /*
+		Retrieve the next page of notifications
+		Called when the user scrolls to the bottom of the popup menu.
+	*/
+	function getNextGeneralNotificationsPage(){
+		var pageNumber = document.getElementById("id_general_page_number").innerHTML
+		// -1 means exhausted or a query is currently in progress
+		if("{{request.user.is_authenticated}}" && pageNumber != "-1"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_general_notifications",
+				"page_number": pageNumber,
+			}));
+		}
+	}
+
+  /*
+		Set the inital timestamp value for id_general_oldest_timestamp.
+		This timestamp is used to determine what constitutes a "NEW" notification or an "OLD" notification.
+	*/
+	function setInitialTimestamp(){
+		// ('%Y-%m-%d %H:%M:%S.%f')
+		var today = new Date();
+		var month = today.getMonth()+1
+		if(month.toString().length == 1){
+			month = "0" + month
+		}
+		var day = today.getDate()
+		if(day.toString().length == 1){
+			day = "0" + day
+		}
+		var hours = today.getHours()
+		if(hours.toString().length == 1){
+			hours = "0" + hours
+		}
+		var minutes = today.getMinutes()
+		if(minutes.toString().length == 1){
+			minutes = "0" + minutes
+		}
+		var seconds = today.getSeconds()
+		if(seconds.toString().length == 1){
+			seconds = "0" + seconds
+		}
+		var ms = "000000"
+		var date = today.getFullYear()+'-'+month+'-'+day + " " + hours + ":" + minutes + ":" + seconds + "." + ms
+		document.getElementById("id_general_oldest_timestamp").innerHTML = date
+	}
+
+	setInitialTimestamp()
 
 </script>

@@ -1,4 +1,14 @@
 {% load static %}
+<p class="d-none" id="id_general_oldest_timestamp"></p>
+<p class="d-none" id="id_general_newest_timestamp"></p>
+<style>
+  #id_general_notifications_area{
+    height: 35rem;
+    max-height: 40rem;
+    overflow: scroll;
+    overflow-x: hidden;
+  }
+</style>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">CHAT-APP</a>
@@ -23,7 +33,7 @@
       <div class="btn-group dropstart mx-3 my-auto" id="id_chat_notifications">
         <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
         <div class="dropdown-menu p-0 top-100 end-50" id="id_chat_notifications">
-          <div class="card" style="width: 20rem;">
+          <div class="card" style="width: 20rem; height: 25rem;">
             <div class="card-header">
               <span class="me-2 fw-bold">Messages</span>
               <button class="btn btn-outline-primary" id="id_go_to_chat">Go to Messages</button>
@@ -48,7 +58,7 @@
           <div class="card-header">
             <span class="me-2 fw-bold">NOTIFICATIONS</span>
             <button class="btn btn-outline-primary">Mark as read</button>
-              <span class="d-none" id="id_page_number">1</span>
+              <span class="d-none" id="id_general_page_number">1</span>
           </div>
           <ul class="list-group list-group-flush" id="id_general_notifications_area">
           <!-- New notifications will be added here -->
@@ -113,6 +123,7 @@
 </nav>
 {% include 'snippets/general_notifications.html'%}
 <script>
+  // Keep track of what notifications are currently visible to the user.
   setupWebSocket()
   function setupWebSocket(){
     url = `ws://${window.location.host}/`;
@@ -132,8 +143,25 @@
     notificationSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
       console.log("Notification Data: ", data)
+      if(data.error){
+        console.log(data['error'])
+        alert(data['message'])
+        return;
+      }
       if(data.msg_type === "0"){
         handleGeneralNotifications(data['notifications'], data['new_page_number'])
+      }
+      // Received a updated notification payload
+      if(data.msg_type === '1'){
+        updateGeneralNotificationDiv(notification)
+      }
+      // Received pagination exhausted payload
+      if(data.msg_type === '2'){
+        setGeneralPaginationExhausted()
+      }
+      // Received a refreshed notifications payload
+      if(data.msg_type === '3'){
+        refreshGeneralNotificationsData(data['notifications'])
       }
     };
 
@@ -147,11 +175,6 @@
       console.log(e);
     };
   }
-
-  function setPageNumber(page_number){
-    elem = document.getElementById("id_page_number");
-    elem.innerText = page_number;
-  };
 
   let go_to_chat = document.getElementById("id_go_to_chat")
   go_to_chat.addEventListener("click", () => {

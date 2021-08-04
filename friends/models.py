@@ -128,7 +128,6 @@ class FriendRequest(models.Model):
         """
         receiver_friendList = FriendList.objects.get(user=self.receiver)
         if receiver_friendList:
-
           content_type=ContentType.objects.get_for_model(self)
           # Update notification for receiver
           receiver_notification = Notification.objects.get(target=self.receiver, content_type=content_type, object_id=self.id)
@@ -140,37 +139,28 @@ class FriendRequest(models.Model):
 
           receiver_friendList.add_friend(self.sender) # --> This will create notification for receiver
 
-          # self.notifications.create(
-          #   target = self.receiver,
-          #   from_user = self.sender,
-          #   redirect_url = f"{settings.BASE_URL}/account/{self.sender.pk}",
-          #   notify_text = f"You accepted {self.sender.username}'s friend request.",
-          #   content_type = content_type
-          # )
-
           sender_friendList = FriendList.objects.get(user=self.sender)
           if sender_friendList:
-
-            # #create a notification for sender
-            # self.notifications.create(
-            #   target=self.sender,
-            #   from_user=self.receiver,
-            #   redirect_url=f"{settings.BASE_URL}/account/{self.receiver.pk}/",
-            #   notify_text=f"For sender - You are now friend with {self.receiver.username}. Say Hello",
-            #   content_type=content_type
-            # )
-
             sender_friendList.add_friend(self.receiver) # --> This will also create notification for sender
             self.is_active = False
             self.save()
-        # return receiver_notification
+        return receiver_notification
 
     def decline(self):
         """
         Decline a friend request -> from receiver's perpective
         """
         self.is_active = False
+        content_type=ContentType.objects.get_for_model(self)
+        # Update notification for receiver
+        receiver_notification = Notification.objects.get(target=self.receiver, content_type=content_type, object_id=self.id)
+        receiver_notification.is_active = False
+        receiver_notification.redirect_url=f"{settings.BASE_URL}/account/{self.sender.pk}"
+        receiver_notification.notify_text=f"You declined {self.sender.username}'s friend request."
+        receiver_notification.timestamp = timezone.now()
+        receiver_notification.save()
         self.save()
+        return receiver_notification
 
     def cancel(self):
         """
