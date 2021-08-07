@@ -163,7 +163,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_messages(self, room, page_number):
         queryset = ChatRoomMessage.objects.filter(room=room).order_by("-timestamp")
-        p = Paginator(queryset, 12)
+        p = Paginator(queryset, 20)
 
         page_number = int(page_number)
         payload = {}
