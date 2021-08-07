@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <h1>Welcome to ChatRoom</h1>
+<style>
+  .public-container{
+    max-width: 600px;
+  }
+</style>
+    <div class="public-container container my-4">
+    <h1>Welcome to Public ChatRoom</h1>
     {% if user.is_authenticated %}
     <form action="/chat/createroom/" method="post" class="form-group mb-2">{% csrf_token %}
         <input type="text" class="form-control mb-1" name="roomName" placeholder="Create a room">
@@ -12,6 +18,7 @@
         <input type="text" class="form-control mb-1" name="join" placeholder="Join a room">
         <button type="submit" class="btn btn-primary">Join Room</button>
     </form>
+  </div>
     {% else %}
     <h1>You must be logged in to use the chat app</h1>
     <!-- <div class="card">
