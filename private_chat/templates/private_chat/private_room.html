@@ -12,6 +12,7 @@ Private_Chat
     margin-bottom: 10px;
   }
   .card-header{
+    background-color: #f2f2f2;
     max-height: 70px;
     height: 60px;
   }
@@ -32,6 +33,20 @@ Private_Chat
 		max-height: 500px;
 		overflow-y: auto;
 	}
+  @media screen and (max-width: 400px) {
+    #chat-area {
+      height: 390px;
+    }
+    .card-header{
+      height: 50px;
+    }
+    .profile-image{
+		width: 15px;
+		height: 15px;
+    margin: auto 10px;
+		/* margin:auto; */
+	}
+  }
 </style>
 
 <div class="d-flex flex-column flex-md-row">
@@ -62,8 +77,9 @@ Private_Chat
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
           {% for x in m_from_f %}
-          <li class="" >
-            <button  class="dropdown-item text-capitalize fs-2" onClick="onSelectFriend('{{x.friend.id}}')">{{ x.friend.name }}</button>
+          <li class="d-flex flex-row" >
+            <img class="profile-image" id="friend_img_{{x.friend.id}}" src="{% static 'images/default_profile.png'%}" alt="">
+            <button  class="dropdown-item text-capitalize fs-4" onClick="onSelectFriend('{{x.friend.id}}')">{{ x.friend.name }}</button>
           </li>
           {% endfor %}
         </ul>
@@ -90,21 +106,17 @@ Private_Chat
           <span class="visually-hidden">Loading...</span>
         </div>
         <div id="chat-area" class="d-flex flex-column overflow-auto ps-2 pe-1 pb-2 my-2 border-1">
-          <!-- <p class="d-flex justify-content-end  mb-2">
-                        <span class="">This is right</span><span class="mx-2">: Harsh </span>
-                    </p>
-                    <p class="d-flex justify-content-start mb-2">
-                        <span class="mx-2">Admin :</span><span class=""> This is left</span>
-                    </p> -->
+          <!-- messages go here   -->
         </div>
         <!-- INPUT CONTAINER STARTS -->
-        <div class="row">
-          <div class="col-10">
-            <input class="form-control" type="text" id="message" />
+        <div class="d-flex flex-row">
+          <div class="col-9 col-md-10">
+            <!-- <input class="form-control flex-grow-1" type="textarea" id="message" /> -->
+            <textarea class="form-control" name="messageInput" id="message" cols="80" rows="1"></textarea>
           </div>
-          <div class="col-2">
+          <div class="col-3 col-md-2">
             <input
-              class="btn btn-primary"
+              class="btn btn-primary w-100"
               type="button"
               id="send-btn"
               value="SEND"
@@ -390,8 +402,12 @@ Private_Chat
     }
   }
 
+
+  inputDOM.focus()
   inputDOM.addEventListener("keyup", (event) => {
-    if (event.keyCode == 13) {
+    if (event.keyCode === 13 && event.shiftKey) {
+      // automatically handled by textarea
+    } else if(event.keyCode === 13 && !event.shiftKey){
       sendBtn.click();
     }
   });
