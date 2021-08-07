@@ -4,7 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from account.models import Account
 
 def index(request):
+  if request.user.is_authenticated:
     return render(request, 'index.html')
+  else:
+    return redirect('account:login')
 
 def handle_login(request):
     try:
@@ -39,6 +42,6 @@ def register(request):
         user.name = name
         # user.last_name = lname
         user.save()
-        return redirect('home')
+        return redirect('login')
     return render(request, 'signup.html')
 

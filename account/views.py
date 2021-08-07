@@ -32,6 +32,8 @@ def register_view(request, *args, **kwargs):
             destination = kwargs.get('next')
             if destination:
                 return redirect(destination)
+            else:
+                return redirect('login')
         else:
             context['registration_form'] = form
 
