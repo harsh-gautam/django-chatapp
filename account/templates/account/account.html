@@ -3,16 +3,39 @@
 
 <style>
   .profile-card {
-    width: 400px;
+    width: 500px;
+  }
+
+  .friends-section{
+    width: 300px;
+  }
+
+  a {
+    text-decoration: none;
+    color: #261c2c;
+  }
+  a:hover {
+    color: #795a8c;
+  }
+
+  @media screen and (max-width: 768px) {
+    .profile-card {
+      width: 100%;
+    }
+    .friends-section{
+      margin-top:10px;
+      width: 100%;
+    }
   }
 </style>
 {% for key, value in context.items %}
 <h3>{{key}}</h3>
 <h1>{{value}}</h1>
 {% endfor %}
-<div class="d-flex flex-row">
-  <div class="card profile-card">
-    <div class="card-header">Profile</div>
+<div class="d-flex flex-column flex-md-row">
+  <!-- PROFILE SECTION  -->
+  <div class="card profile-card col-12 col-md-8">
+    <div class="card-header fs-3 fw-bolder">Profile</div>
     <div class="card-body align-items-center">
       <div class="d-flex flex-column align-items-center justify-content-center">
         <div class="img-container d-flex flex-column mb-4">
@@ -29,25 +52,25 @@
           </button>
           {% endif %}
         </div>
-        <p class="mb-1 mt-3 field-heading">Name</p>
-        <h5>{{name|capfirst}}</h5>
-        <p class="mb-1 mt-3 field-heading">Email</p>
+        <p class="mb-1 mt-3 field-heading fw-bolder fs-4">Name</p>
+        <h5 class="fw-normal fs-5">{{name|capfirst}}</h5>
+        <p class="mb-1 mt-3 field-heading fw-bolder fs-4">Email</p>
         {% if is_self %}
-        <h5>{{ email }}</h5>
+        <h5 class="fw-normal fs-5">{{ email }}</h5>
         {% else %} {% if hide_email %}
-        <h5>***************</h5>
+        <h5 class="fw-normal fs-5">***************</h5>
         {% else %}
-        <h5>{{ email }}</h5>
+        <h5 class="fw-normal fs-5">{{ email }}</h5>
         {% endif %} {% endif %}
-        <p class="mb-1 mt-3 field-heading">Username</p>
-        <h5>{{username}}</h5>
+        <p class="mb-1 mt-3 field-heading fw-bolder fs-4">Username</p>
+        <h5 class="fw-normal fs-5">{{username}}</h5>
 
         {% if is_self %}
         <div class="d-flex flex-column my-4">
           <a
             href="{% url 'account:edit' user_id=id %}"
             class="btn btn-primary mb-3"
-            >Update</a
+            >Edit Details</a
           >
           <a href="#">Change Password</a>
         </div>
@@ -55,9 +78,11 @@
       </div>
     </div>
   </div>
-  <div class="d-flex flex-column">
+  <!-- PROFILE SECTION ENDS  -->
+  <!-- FRIENDS SECTION  -->
+  <div class="friends-section col-12 col-md-4">
     {% if is_self %}
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
         <h3>
           <a href="{% url 'friends:friend-list' user_id=id %}"
@@ -66,8 +91,8 @@
         </h3>
       </div>
     </div>
-    <div class="card ms-4 mb-2">
-      <div class="card-header">Pending Friend Requests</div>
+    <div class="card ms-md-4 mb-2">
+      <div class="card-header fs-5 fw-bolder">Pending Friend Requests</div>
       <div class="card-body">
         {% for friend_req in friend_requests %}
         <div class="d-flex flex-column">
@@ -81,48 +106,48 @@
       </div>
     </div>
     {% else %} {% if is_friend %}
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
-        <h3>
+        <h3 class="fs-4">
           <a href="{% url 'friends:friend-list' user_id=id %}"
             >Friends ({{ friends|length }})</a>
         </h3>
       </div>
     </div>
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
-        <h3 id="message_{{id}}">
-          <a onclick="createOrReturnPrivateChat('{{id}}', '{{csrf_token}}')"
+        <h3 class="fs-4" id="message_{{id}}">
+          <a href="#" onclick="createOrReturnPrivateChat('{{id}}', '{{csrf_token}}')"
             >Send Message</a>
         </h3>
       </div>
     </div>
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
-        <h3 id="remove_{{id}}">
+        <h3 class="fs-4" id="remove_{{id}}">
           <a id="id_removeFriendBtn" href="#">Remove Friend</a>
         </h3>
       </div>
     </div>
     {% else %} {% if is_friend == False and request_sent == 1 %}
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
-        <h3><a id="id_sendFriendReqBtn" href="#">Send Friend Request</a></h3>
+        <h3 class="fs-4"><a class="text-wrap" id="id_sendFriendReqBtn" href="#">Send Friend Request</a></h3>
       </div>
     </div>
     {% endif %} {% if is_friend == False and request_sent == 2 %}
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
-        <h3 id="cancel_{{id}}">
-          <a id="id_cancelFriendReqBtn" href="#">Cancel Friend Request</a>
+        <h3 class="fs-4" id="cancel_{{id}}">
+          <a class="text-wrap" id="id_cancelFriendReqBtn" href="#">Cancel Friend Request</a>
         </h3>
       </div>
     </div>
     {% endif %} {% if is_friend == False and request_sent == 3 %}
-    <div class="card ms-4 mb-2">
+    <div class="card ms-md-4 mb-2">
       <div class="card-body">
         <div class="d-flex flex-row">
-          <div id="pending_req_{{ pending_friend_req_id }}">
+          <div class="fs-4" id="pending_req_{{ pending_friend_req_id }}">
             Accept Friend Request?
             <a class="id_acceptFriendReqBtns" href="#"> accept </a>
             <a class="id_declineFriendReqBtns" href="#"> decline</a>
@@ -132,6 +157,7 @@
     </div>
     {% endif %} {% endif %} {% endif %}
   </div>
+  <!-- FRIENDS SECTION ENDS  -->
 </div>
 {% endblock body %} {% block script %}
 <script>

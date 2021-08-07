@@ -5,7 +5,16 @@
 {% endblock title %}
 
 {% block body %}
-
+<style>
+  a {
+    text-decoration: none;
+    color: #261c2c;
+  }
+  a:hover {
+    color: #795a8c;
+  }
+</style>
+{% csrf_token %}
 <div class="card">
 <div class="card-body">
     <div class="d-flex flex-column"></div>
@@ -13,17 +22,20 @@
         {% for account in accounts %}
         <div class="d-flex align-items-stretch border border-2 mb-2 p-2">
             <span><img class="border rounded-circle" src="/{{account.0.profile_image}}" alt="" width="50" height="50"></span>
-            <a href="{% url 'account:profile' user_id=account.0.id %}"><h3>{{account.0.name}}</3></a>
+            <a href="{% url 'account:profile' user_id=account.0.id %}">
+              <span class="text-capitalize fs-3 px-2 fw-bolder">{{account.0.name}}</span>
+            </a>
             {% if account.1 %}
                 
-                    <span style="color: green;">Friends</span><span style="color: blue;">Send Message</span>
+                    <!-- <span class="px-2" style="color: green;">Friends</span> -->
+                    <a href="#" onclick="createOrReturnPrivateChat('{{account.0.id}}', '{{csrf_token}}')" class="px-2 fs-5 fw-normal lh-lg clickable" style="color: blue;">Send Message</a>
                 
             {% else %}
                 {% if account.0.pk == request.user.pk %}
-                    <span style="color: green;">This is you</span>
+                    <span class="px-2 fs-5 fw-normal lh-lg" style="color: green;">Me</span>
                 {% else %}
                     {% if user.is_authenticated %}
-                    <span style="color: red;">Not Friends</span>
+                    <span class="px-2 fs-5 fw-normal lh-lg" style="color: red;">Not Friends</span>
                     {% else %}
                     <span style="color: red;"></span>
                     {% endif %}
@@ -36,4 +48,5 @@
     {% endif %}
 </div>
 </div>
+{% include 'private_chat/snippets/create_or_return_private_chat.html' %}
 {% endblock body %}

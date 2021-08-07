@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="container my-4">
+<style>
+  .register-container{
+    max-width: 600px;
+  }
+</style>
+<div class="register-container container my-4">
+  <legend class="fs-3 fw-bolder mb-3">Register for an account</legend>
     <form action="/account/register/" method="post" class="form-group row">{% csrf_token %}
         <div class="form-floating mb-2 col-12">
             <input type="text" class="form-control" name="name" id="Name" placeholder="Name" required>
@@ -68,9 +74,9 @@
 
 				{% endif %}
         <div class="col-12">
-            <button class="btn btn-primary" type="submit">Sign Up</button>
+            <button class="btn btn-primary my-2" type="submit">Sign Up</button>
         </div>
     </form>
-    <p>Already have an account? <a href="{% url 'account:login' %}">Log in!</a></p>
+    <p class="my-2 fw-bolder">Already have an account? <a class="text-decoration-none" href="{% url 'account:login' %}">Log in!</a></p>
 </div>
 {% endblock body %}
