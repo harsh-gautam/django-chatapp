@@ -148,7 +148,7 @@
 
     notificationSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
-      console.log("Notification Data: ", data)
+      // console.log("Notification Data: ", data)
       if(data.error){
         console.log(data['error'])
         alert(data['message'])

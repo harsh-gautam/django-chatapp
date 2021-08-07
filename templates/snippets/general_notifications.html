@@ -113,7 +113,7 @@
     listItemElem.addEventListener("click", () => console.log("clicked notification") /*TODO: Do something later */)
 
     timestampElem = createGeneralTimestampElement(notification)
-    console.log("Notification Status", notification["is_active"])
+    // console.log("Notification Status", notification["is_active"])
 
     if(notification["is_active"] === "True"){
       
@@ -190,23 +190,23 @@
 		Append a general notification to the BOTTOM of the list.
 	*/
 	function appendBottomGeneralNotification(notification){
-    console.log("Appending new notification")
+    // console.log("Appending new notification")
 
     switch(notification['notification_type']) {
 
       case "FriendRequest":
         notificationArea = document.getElementById("id_general_notifications_area")
-        console.log("Notification Area: ", notificationArea.children)
+        // console.log("Notification Area: ", notificationArea.children)
         frItem = createFriendRequestElement(notification)
-        console.log("Friend Request Notification: ", frItem)
+        // console.log("Friend Request Notification: ", frItem)
         notificationArea.appendChild(frItem)
         break;
 
       case "FriendList":
         notificationArea = document.getElementById("id_general_notifications_area")
-        console.log("Notification Area: ", notificationArea.children)
+        // console.log("Notification Area: ", notificationArea.children)
         flItem = createFriendListElement(notification)
-        console.log("Friend List Notification: ", flItem)
+        // console.log("Friend List Notification: ", flItem)
         notificationArea.appendChild(flItem)
         break;
 
@@ -258,7 +258,7 @@
       
       notifications.forEach(notification => {
         submitGeneralNotificationToCache(notification)
-        console.log("Handling Notification: ", notification)
+        // console.log("Handling Notification: ", notification)
         // appendBottomGeneralNotification(notification)
         setGeneralOldestTimestamp(notification['timestamp'])
         setGeneralNewestTimestamp(notification['timestamp'])
@@ -272,7 +272,7 @@
 		Called every GENERAL_NOTIFICATION_INTERVAL
 	*/
 	function refreshGeneralNotificationsData(notifications){
-		console.log(notifications)
+		// console.log(notifications)
 		if(notifications.length > 0){
 			clearNoGeneralNotificationsItem();
 			notifications.forEach(notification => {
