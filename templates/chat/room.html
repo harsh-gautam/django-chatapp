@@ -1,13 +1,24 @@
 {% extends 'base.html' %} {% load static %} {% block title %}{{room_name}} 
 {%endblock title %} {% block head %}
 <link rel="stylesheet" href="{% static 'css/room.css' %}" />
+<style>
+  #chat-area{
+    border: none;
+    padding: 0 15px;
+  }
+  @media screen and (max-width: 400px) {
+    #chat-area {
+      height: 430px;
+    }
+	}
+</style>
 {% endblock head %} {% block body %}
 
 <div class="container my-2">
     <div class="card col-12 px-0">
       <div class="card-header d-flex flex-row justify-content-between">
         <span class="fw-bolder fs-2 ">{{ room_title }}</span>
-        <p class="m-0 lh-lg">Connected Users: <span class="" id="connected_users">0</span></p>
+        <p class="d-none d-md-flex m-0 lh-lg">Connected Users: <span class="" id="connected_users">0</span></p>
         <button class="btn btn-danger" onclick="leaveRoom()">Leave Room</button>
       </div>
       <div class="card-body text-center p-0">
@@ -19,12 +30,13 @@
         <div id="chat-area" class="overflow-auto py-3">
           <!-- messages go here  -->
         </div>
-        <!-- <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br> -->
+
+        <!-- INPUT CONTAINER STARTS -->
         <div class="d-flex flex-row">
-          <div class="col-11">
+          <div class="col-9 col-md-11">
             <textarea class="form-control" name="message" id="message" cols="30" rows="1"></textarea>
           </div>
-          <div class="col-1">
+          <div class="col-3 col-md-1">
             <input
               class="btn btn-primary w-100"
               type="button"
@@ -33,6 +45,7 @@
             />
           </div>
         </div>
+        <!-- INPUT CONTAINER ENDS  -->
       </div>
     </div>
 </div>
@@ -138,13 +151,16 @@
     let message = data["content"];
     let author = data["user"];
     let user_id = data["user_id"]
+    let timestamp = data["timestamp"]
+    let colors = ['#0000b3', "#1f3d7a", "#004d00", "#4c0080", "#b38f00", "#0086b3"]
 
     let p_tag = document.createElement("p");
     p_tag.classList.add("my-0", "p-1", "d-flex", "flex-row");
 
     let ts = document.createElement("span")
-    ts.classList.add("text-muted", "fs-6")
-    ts.innerText = "4:00pm"
+    ts.classList.add("text-muted", "d-none", "d-md-flex")
+    ts.style.fontSize = "0.9rem";
+    ts.innerText = timestamp
 
     let span_name = document.createElement("a");
     span_name.classList.add("me-3", "ms-2", "fs-6", "text-decoration-none");
@@ -163,7 +179,7 @@
       // span_msg.classList.add("rtl");
       
     } else {
-      span_name.classList.add("text-info");
+      span_name.style.color = colors[Math.floor(Math.random() * colors.length)];
       span_name.innerHTML = author + " <b>:</b> ";
       // p_tag.appendChild(span_name);
       // p_tag.appendChild(span_msg);
@@ -204,7 +220,9 @@
   });
 
   inputDOM.addEventListener("keyup", (event) => {
-    if (event.keyCode == 13) {
+    if (event.keyCode === 13 && event.shiftKey) {
+      // do nothing
+    } else if (event.keyCode === 13 && !event.shiftKey){
       sendBtn.click();
     }
   });
