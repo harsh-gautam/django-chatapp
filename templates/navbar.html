@@ -30,9 +30,11 @@
       {% if user.is_authenticated %}
 
       <!-- Chat Dropdown -->
-      <div class="btn-group dropstart mx-3 my-auto" id="id_chat_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
-        <div class="dropdown-menu p-0 top-100 end-50" id="id_chat_notifications">
+      <div class="btn-group mx-3 my-auto" id="id_chat_notifications"> <!-- dropstart -->
+        <a class="" href="{% url 'private_chat:private-room' %}">
+          <img class="border border-2 border-light" src="{% static 'vendor/bootstrap/icons/chat-right-text.svg' %}" alt="Private Chat Button" width="30" height="30">
+        </a>
+        <!-- <div class="dropdown-menu p-0 top-100 end-50" id="id_chat_notifications">
           <div class="card" style="width: 20rem; height: 25rem;">
             <div class="card-header">
               <span class="me-2 fw-bold">Messages</span>
@@ -40,19 +42,19 @@
                 <span class="d-none" id="id_page_number">1</span>
             </div>
             <ul class="list-group list-group-flush" id="id_chat_notifications_area">
-            <li class="list-group-item border-bottom">
-              <span></span>
-              <span class="d-block small py-1 fw-bolder">You are now friends with harsh27. Say Hello</span>
-            </li>
-          </ul> 
+              <li class="list-group-item border-bottom">
+                <span></span>
+                <span class="d-block small py-1 fw-bolder">You are now friends with harsh27. Say Hello</span>
+              </li>
+            </ul> 
           </div>
-          </div>
+        </div> -->
       </div>
       <!-- Chat Dropdown  -->
 
       <!-- Notification Dropdown  -->
       <div class="btn-group dropstart mx-3 my-auto" id="id_general_notifications">
-        <img class="border border-2 border-light dropdown-toggle" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
+        <img class="border border-2 border-light dropdown-toggle pe-auto" src="{% static 'vendor/bootstrap/icons/bell.svg' %}" data-bs-toggle="dropdown" aria-expanded="false" alt="User Profile Image" width="30" height="30">
         <span id="id_general_notifications_count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
           
           <span class="visually-hidden">unread notifications</span>
@@ -66,30 +68,7 @@
               <span class="d-none" id="id_general_page_number">1</span>
           </div>
           <ul class="list-group list-group-flush" id="id_general_notifications_area">
-          <!-- New notifications will be added here -->
-          <!-- <li class="list-group-item border-bottom">
-            <span>You are no longer friends with harsh27</span>
-            <span class="d-block small py-1 fw-bolder">a minute ago</span>
-          </li>
-          <li class="list-group-item border-bottom">
-            <span >You are now friends with harsh27. Say Hello</span>
-            <span class="d-block small py-1 fw-bolder">a minute ago</span>
-          </li>
-          <li class="list-group-item border-bottom">
-            <span>
-              Harsh send a friend request 
-            </span>
-            <span class="d-block small py-1 fw-bolder">a minute ago</span>
-            <span class="d-flex flex-row justify-content-center">
-              <button class="btn btn-success mx-2">Accept</button>
-              <button class="btn btn-danger mx-2">Decline</button>
-            </span>
-          </li>
-          <li class="list-group-item border-bottom"><span>You are now friends with harsh27. Say Hello</span>
-            <span class="d-block small py-1 fw-bolder">a minute ago</span></li>
-          <li class="list-group-item border-bottom"><span>You are now friends with harsh27. Say Hello</span>
-            <span class="d-block small py-1 fw-bolder">a minute ago</span>
-          </li> -->
+            <!-- NEW NOTIFICATIONS WILL BE ADDED HERE  -->
         </ul> 
         </div>
       </div>

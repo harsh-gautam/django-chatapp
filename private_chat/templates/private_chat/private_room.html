@@ -3,10 +3,18 @@
 Private_Chat
 {%endblock title %} 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/room.css' %}" />
+<!-- <link rel="stylesheet" href="{% static 'css/room.css' %}" /> -->
 {% endblock head %} 
 {% block body %}
 <style type="text/css">
+  #chat-area {
+    height: 500px;
+    margin-bottom: 10px;
+  }
+  .card-header{
+    max-height: 70px;
+    height: 60px;
+  }
   .profile-image{
 		width: 33px;
 		height: 33px;
@@ -17,34 +25,71 @@ Private_Chat
 		cursor: pointer;
 	}
   .friend-container:hover{
-		background: rgba(180, 180 ,180, 80);
+		background: #d9d9d9;
 		cursor: pointer;
 	}
 	.friends-list-container{
 		max-height: 500px;
-		overflow-y: scroll;
+		overflow-y: auto;
 	}
 </style>
 
-<div class="container my-2">
-  <div class="row">
-    <div class="card col-8 px-0" id="id_chatroom_card">
-      <div class="card-header" id="{{room_id}}">
-        <a class="d-flex flex-row" href="#" target="_blank" id="id_user_info_container">
-        <img class="profile-image rounded-circle img-fluid" id="id_other_user_pimage" src="{% static 'images/default_profile.png'%}">
-        <h3 class="ml-2" id="id_other_username">
+<div class="d-flex flex-column flex-md-row">
+  <!-- Friends List starts -->
+    <!-- MEDIUM SCREENS -->
+    <div class="d-none d-md-flex card col-3 px-0">
+      <div class="card-header">
+        <span class="fw-bold fs-2 pe-none">Friends</span>
+      </div>
+      <div class="d-flex flex-column friends-list-container chats">
+          {% for x in m_from_f %}
+          <div class="d-flex flex-row p-2 friend-container flex-grow-1 pe-auto" onClick="onSelectFriend('{{x.friend.id}}')" id="friend_{{ x.friend.id }}">
+            <img class="profile-image rounder-circle img-fluid" id="friend_img_{{x.friend.id}}" src="{% static 'images/default_profile.png'%}" alt="">
+            <div class="d-flex flex-column">
+              <span class="lh-base ms-2 username-span text-capitalize">{{ x.friend.name }}</span>
+              <span class="message-span">{{ x.message|truncatechars:20 }}</span>
+            </div>
+          </div>
+          <hr class="m-1">
+          {% endfor %}
+      </div>
+    </div>
+    <!-- SMALL SCREENS  -->
+    <div class="d-flex d-md-none card col-12 px-0">
+      <div class="dropdown w-100">
+        <button class=" w-100 btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+          Select Friend
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+          {% for x in m_from_f %}
+          <li class="" >
+            <button  class="dropdown-item text-capitalize fs-2" onClick="onSelectFriend('{{x.friend.id}}')">{{ x.friend.name }}</button>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <!-- Friends List ends  -->
+
+    <!-- CHAT CONTAINER STARTS  -->
+    <div class="card col-12 col-md-8 px-0" id="id_chatroom_card">
+      <!-- CARD HEADER  -->
+      <div class="card-header d-flex flex-row" id="{{room_id}}">
+        <a class="d-flex flex-row text-decoration-none" href="#" target="_blank" id="id_user_info_container">
+        <img class="rounded-circle img-fluid mx-2" id="id_other_user_pimage" src="{% static 'images/default_profile.png'%}" width="40px" height="40px">
+        <h3 class="fs-2 m-0 mx-2 lh-base text-capitalize" id="id_other_username">
           
         </h3>
-        
-        <span id="id_status" class="p-2 mx-4 my-3 bg-danger border border-light rounded-circle"></span>
         </a>
+        <span id="id_status" class="p-2 mx-3 my-3 bg-danger rounded-circle"></span>
       </div>
-      <div class="card-body ">
-        <span class="invisible" id="page_number">1</span>
-        <div class="spinner invisible spinner-border mx-auto">
+      <!-- CARD BODY  -->
+      <div class="card-body p-0">
+        <span class="d-none" id="page_number">1</span>
+        <div class="d-none spinner spinner-border mx-auto">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <div id="chat-area" class="d-flex flex-column overflow-auto py-3">
+        <div id="chat-area" class="d-flex flex-column overflow-auto ps-2 pe-1 pb-2 my-2 border-1">
           <!-- <p class="d-flex justify-content-end  mb-2">
                         <span class="">This is right</span><span class="mx-2">: Harsh </span>
                     </p>
@@ -52,7 +97,7 @@ Private_Chat
                         <span class="mx-2">Admin :</span><span class=""> This is left</span>
                     </p> -->
         </div>
-        <!-- <textarea name="" class="p-2" id="chat-area" cols="80" rows="25" disabled style="resize: none;"></textarea><br> -->
+        <!-- INPUT CONTAINER STARTS -->
         <div class="row">
           <div class="col-10">
             <input class="form-control" type="text" id="message" />
@@ -66,26 +111,11 @@ Private_Chat
             />
           </div>
         </div>
+        <!-- INPUT CONTAINER ENDS  -->
       </div>
-    </div>
-    <div class="card col-3 px-0">
-      <div class="card-header">Friends:</div>
-      <div class="card-body chats">
-        <div class="d-flex flex-column friends-list-container">
-          {% for x in m_from_f %}
-          <div class="d-flex flex-row p-2 friend-container flex-grow-1" onClick="onSelectFriend('{{x.friend.id}}')" id="friend_{{ x.friend.id }}">
-            <img class="profile-image rounder-circle img-fluid" id="friend_img_{{x.friend.id}}" src="{% static 'images/default_profile.png'%}" alt="">
-            <div class="d-flex flex-column">
-              <span class="username-span">{{ x.friend.username }}</span>
-              <span class="message-span">{{ x.message|truncatechars:20 }}</span>
-            </div>
-          </div>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
 </div>
+
+    
 
 <!-- Client Error MODAL -->
 <button type="button" id="id_trigger_client_error_modal" class="d-none btn btn-primary" data-toggle="modal" data-target="#id_client_error_modal">
@@ -217,7 +247,7 @@ Private_Chat
 
   function handleUserInfo(userInfo) {
     document.getElementById("id_user_info_container").href="{% url 'account:profile' user_id=124231 %}".replace("124231", userInfo['id'])
-    document.getElementById("id_other_username").innerHTML= userInfo["username"]
+    document.getElementById("id_other_username").innerHTML= userInfo["name"]
   }
 
   function setOnlineStatus(status){
@@ -249,10 +279,11 @@ Private_Chat
     let message = data["message"]
     let author = data["username"]
     let user = "{{request.user}}"
+    let timestamp = data['natural_timestamp']
 
     switch(msg_type){
       case 0:
-        createMessage(message, author, user, isNewMessage)
+        createMessage(message, author, user, timestamp, isNewMessage)
         break;
       case 1:
         // User joined room
@@ -266,40 +297,46 @@ Private_Chat
       
   }
     
-    function createMessage(message, author, current_user, isNewMessage) {
+    function createMessage(message, author, current_user, timestamp, isNewMessage) {
       
-      let p_tag = document.createElement("p");
-      p_tag.classList.add("my-2", "bg-light", "p-2");
+      let messageContainer = document.createElement("div");
+      messageContainer.classList.add("d-flex");
+
+      let spacer = document.createElement("div");
+      spacer.classList.add("flex-grow-1", "flex-shrink-1")
+
+      let span = document.createElement("span");
+      span.classList.add("rounded", "my-1", "px-3", "py-1");
+      span.style.maxWidth = "300px";
       
-      let span_name = document.createElement("span");
-      span_name.classList.add("mx-2");
+      let msg = document.createElement('p');
+      msg.classList.add("text-break", "fs-5", "m-0")
+      msg.innerText = message
+
+      let ts = document.createElement("span");
+      ts.classList.add("float-end", "fw-normal",  "fst-italic", "text-uppercase")
+      ts.style.fontSize = "0.7rem";
+      ts.innerText = timestamp;
+
+      span.appendChild(msg)
+      span.appendChild(ts)
       
-      let span_msg = document.createElement("span");
-      span_msg.innerText = message;
-      span_msg.classList.add("text-break");
       
       if (author === current_user) {
-        p_tag.classList.add("send");
-        span_name.classList.add("text-info");
-        span_msg.classList.add("text-end");
-        span_name.innerText = " : You";
-        // span_name.classList.add("rtl");
-        // span_msg.classList.add("rtl");
-        p_tag.appendChild(span_msg);
-        p_tag.appendChild(span_name);
+        span.style.backgroundColor = "#F0F8FF";
+        messageContainer.appendChild(spacer)
+        messageContainer.appendChild(span)
       } else {
-        p_tag.classList.add("reply");
-        span_name.classList.add("text-warning");
-        span_name.innerText = author + " : ";
-        p_tag.appendChild(span_name);
-        p_tag.appendChild(span_msg);
+        span.style.backgroundColor = "#a3c2c2";
+        messageContainer.appendChild(span)
+        messageContainer.appendChild(spacer)
       }
       if (!isNewMessage) {
         document
         .querySelector("#chat-area")
-        .insertBefore(p_tag, chatWindow.firstChild);
+        .insertBefore(messageContainer, chatWindow.firstChild);
       } else {
-        document.querySelector("#chat-area").appendChild(p_tag);
+        document.querySelector("#chat-area").appendChild(messageContainer);
         scrollDown();
       }
     }
@@ -347,7 +384,7 @@ Private_Chat
       messages.forEach((message) => {
         appendChatMessage(message, false);
       });
-      toggleSpinner();
+      // toggleSpinner();
     } else {
       setPaginationExhausted();
     }

@@ -119,7 +119,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         "profile_image": self.scope['user'].profile_image.url,
         "username": self.scope['user'].username,
         "user_id": self.scope['user'].id,
-        "message": message
+        "message": message,
       }
     )  
 
@@ -136,7 +136,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
       {
         "type":"chat.leave",
         "room_id": room_id,
-        "profile_image": self.scope["user"].profile_image.url,
         "username": self.scope["user"].username,
         "user_id": self.scope["user"].id
       }
@@ -164,7 +163,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         {
           "msg_type": MSG_TYPE_ENTER,
           "room": event["room_id"],
-          "profile_image": event["profile_image"],
           "username": event["username"],
           "user_id": event["user_id"],
           "message": event["username"] + " is online.",
@@ -203,7 +201,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         "username": event['username'],
         'user_id': event['user_id'],
         'message': event['message'],
-        'timestamp': timestamp
+        'natural_timestamp': timestamp
       }
     ))
 
