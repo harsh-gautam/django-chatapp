@@ -30,7 +30,7 @@ def calculate_timestamp(timestamp):
   if (naturalday(timestamp) == "today") or (naturalday(timestamp) == "yesterday"):
     str_time = datetime.strftime(timestamp, "%I:%M %p")
     str_time = str_time.strip("0")
-    ts = f"{naturalday(timestamp)} at {str_time}"
+    ts = f"{str_time}"
   # other days
   else:
     str_time = datetime.strftime(timestamp, "%m/%d/%Y")
