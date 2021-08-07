@@ -20,7 +20,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
   async def receive(self, text_data):
     data = json.loads(text_data)
-    print("Notification Consumer Recieved Data: ", data)
+    # print("Notification Consumer Recieved Data: ", data)
     command = data['command']
     if command is not None:
       await self.commands[command](self, data)
@@ -33,7 +33,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     page_number = data.get("page_number", None)
     try:
       payload = await self.db_get_general_notifications(user, page_number)
-      print("NOTIFICATION PAYLOAD TO SEND: ", payload)
+      # print("NOTIFICATION PAYLOAD TO SEND: ", payload)
       if payload is not None:
         payload = json.loads(payload)
         await self.send_general_notifications(payload["notifications"], payload['new_page_number'])
@@ -43,7 +43,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
       self.handle_client_error(e)
 
   async def send_general_notifications(self, notifications, new_page_number):
-    print(notifications, new_page_number)
+    # print(notifications, new_page_number)
     await self.send(text_data=json.dumps({
       "msg_type": "0",
       "notifications": notifications,

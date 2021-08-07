@@ -52,6 +52,10 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     user = self.scope["user"]
     try:
       room = await self.get_room_or_error(id, user)
+      other_user = room.user1
+      if other_user == user:
+        other_user = room.user2
+      status = await self.get_user_connected(room, other_user)
     except ClientError as e:
       return await self.handle_client_error(e)
 
@@ -68,6 +72,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
     # Infrom client that chat is connected
     await self.send(text_data=json.dumps({
 			"join": str(room.id),
+      "onlineStatus": status,
 		}))
     
     # Notify Consumer Group that someone has joined
@@ -122,6 +127,8 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
   async def leave_room(self, room_id):
     user = self.scope["user"]
     room = await self.get_room_or_error(room_id, user)
+
+    await self.disconnect_user(room, self.scope['user'])
 
     # Notify the group that someone has left
     await self.channel_layer.group_send(
@@ -248,6 +255,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         'new_page_number': new_page_number
       }
     ))
+    
 
   async def display_progress_bar(self, is_displayed):
     """
@@ -337,3 +345,11 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
   @database_sync_to_async
   def create_room_message(self, room, user, message):
     return PrivateChatMessage.objects.create(user=user, room=room, content=message)
+
+  @database_sync_to_async
+  def get_user_connected(self, room, user):
+    connected_users = room.connected_users.all()
+    if user in connected_users:
+      return True
+    else:
+      return False

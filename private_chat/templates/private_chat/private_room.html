@@ -129,21 +129,11 @@ Private_Chat
   }
 
   function onSelectFriend(userId){
+    console.log("Selecting Friend", userId)
 		createOrReturnPrivateChat(userId, csrfmiddlewaretoken)
 	}
 
   // var spinner = document.querySelector(".spinner");
-
-  // function leaveRoom() {
-  //   socket.send(
-  //     JSON.stringify({
-  //       command: "leave_room",
-  //       data: "",
-  //     })
-  //   );
-  //   window.location.replace("http://" + window.location.host);
-  // }
-
   
   // chatWindow.addEventListener("scroll", function () {
     //   if (Math.abs(chatWindow.scrollTop) == 0) {
@@ -168,6 +158,7 @@ Private_Chat
     socket.onopen = function open() {
       console.log("WebSocket Connection Open.");
       socket.send(JSON.stringify({ "room_id": roomId, "command": "join_room" }));
+      // getOnlineStatus(userId)
     };
 
     if (socket.readyState == WebSocket.OPEN) {
@@ -189,6 +180,8 @@ Private_Chat
         console.log("Joining room " + data.join)
         socket.send(JSON.stringify({"command":"get_user_info", "room_id": roomId}))
         getPreviousChatMessages()
+        console.log("OTHER USER ONLINE STATUS", data.onlineStatus)
+        setOnlineStatus(data.onlineStatus)
       }
 
       // Handling Leave
@@ -205,6 +198,7 @@ Private_Chat
         appendChatMessage(data, true)
         // create_message(data, true)
       }
+      
       if(data.messages_payload) {
         handleLoadMessageEvent(data["messages"], )
       }
@@ -224,6 +218,19 @@ Private_Chat
   function handleUserInfo(userInfo) {
     document.getElementById("id_user_info_container").href="{% url 'account:profile' user_id=124231 %}".replace("124231", userInfo['id'])
     document.getElementById("id_other_username").innerHTML= userInfo["username"]
+  }
+
+  function setOnlineStatus(status){
+    if(status === true){
+      statusElem = document.getElementById("id_status");
+      statusElem.classList.remove('bg-danger')
+      statusElem.classList.add('bg-success')
+    }
+    if(status === false){
+      statusElem = document.getElementById("id_status");
+      statusElem.classList.remove('bg-success')
+      statusElem.classList.add('bg-danger')
+    }
   }
 
   function showClientErrorModal(message){
@@ -249,11 +256,11 @@ Private_Chat
         break;
       case 1:
         // User joined room
-        createConnectedDisconnectedMessage(msg_type, message, author, user)
+        setOnlineStatus(true)
         break;
       case 2:
         // User leave room
-        createConnectedDisconnectedMessage(msg_type, message, author, user)
+        setOnlineStatus(false)
         break;
     }
       
@@ -296,21 +303,6 @@ Private_Chat
         scrollDown();
       }
     }
-    
-  function createConnectedDisconnectedMessage(msg_type, message, author, user){
-    if(author === user) return;
-    let status = document.getElementById("id_status");
-    // TODO : Fix bug in online status 
-    if(msg_type === 1){
-      status.classList.remove("bg-danger")
-      status.classList.add("bg-success")
-    }
-    if(msg_type === 2){
-      status.classList.remove("bg-success")
-      status.classList.add("bg-danger")
-    }
-    
-  }
     
   sendBtn = document.querySelector("#send-btn");
   inputDOM = document.querySelector("#message");
