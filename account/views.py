@@ -262,8 +262,8 @@ def crop_image_view(request, *args, **kwargs):
         cropY = 0
 
       crop_img = img[cropY:cropY+cropHeight, cropX:cropX+cropWidth]
-      stretch_img = cv2.resize(crop_img, (cropWidth, cropHeight),interpolation = cv2.INTER_NEAREST)
-      cv2.imwrite(url, stretch_img)
+      # stretch_img = cv2.resize(crop_img, (cropWidth, cropHeight),interpolation = cv2.INTER_NEAREST)
+      cv2.imwrite(url, crop_img)
       user.profile_image.delete()
       # Save the cropped image to user model
       user.profile_image.save("profile_image.png", files.File(open(url, 'rb')))
