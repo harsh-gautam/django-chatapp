@@ -191,7 +191,6 @@ def edit_account_view(request, *args, **kwargs):
     if request.POST:
         form = UpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            account.profile_image.delete()
             print("VALID FORM")
             form.save()
             # new_username = form.cleaned_data['username']
@@ -227,7 +226,6 @@ def edit_account_view(request, *args, **kwargs):
 def save_temp_profile_image_from_base64String(imageString, user):
   INCORRECT_PADDING_EXCEPTION = "Incorrect padding"
   try:
-    print(MEDIA_ROOT)
     if not os.path.exists(f"{MEDIA_ROOT}/profile_images/{str(user.pk)}/temp"):
       os.mkdir(f"{MEDIA_ROOT}/profile_images/{str(user.pk)}/temp")
     url = os.path.join(MEDIA_ROOT + "/profile_images/" + str(user.pk) + "/temp/temp_profile.png")
@@ -269,6 +267,8 @@ def crop_image_view(request, *args, **kwargs):
       # Save the cropped image to user model
       user.profile_image.save("profile_image.png", files.File(open(url, 'rb')))
       user.save()
+      # status = cv2.imwrite(f"{MEDIA_ROOT}/profile_images/{str(user.pk)}/profile_image.png", crop_img)
+      # print(status)
 
       payload["result"] = "success"
       payload["cropped_profile_image"] = user.profile_image.url

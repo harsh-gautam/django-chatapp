@@ -142,6 +142,8 @@ STATICFILES_DIRS = (
   os.path.join(BASE_DIR, "media"),
 )
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5240000
+
 
 ASGI_APPLICATION = "chatapp.routing.application"
 CHANNEL_LAYERS = {
