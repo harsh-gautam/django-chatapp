@@ -6,6 +6,7 @@ from account.views import (
     logout_view,
     account_view,
     edit_account_view,
+    crop_image_view,
     )
 
 app_name = "account"
@@ -17,4 +18,5 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('profile/<user_id>/', account_view, name="profile"),
     path('profile/<user_id>/edit/', edit_account_view, name="edit"),
+    path('profile/<user_id>/edit/crop/', crop_image_view, name='crop-image'),
 ]

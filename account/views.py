@@ -1,5 +1,10 @@
+from chatapp.settings import MEDIA_ROOT
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
+from django.core.files.storage import default_storage
+from django.core.files.storage import FileSystemStorage
+from django.core import files
+from django.conf import settings
 from account.forms import RegistrationForm, LoginForm, UpdateForm
 from account.models import Account
 
@@ -9,6 +14,12 @@ from friends.utils import FriendReqStatus, get_friend_req_or_false
 from private_chat.models import PrivateChatRoom
 from private_chat.utils import find_or_create_private_chat
 
+import json
+import os
+import cv2
+import base64
+
+MEDIA_ROOT = settings.MEDIA_ROOT
 # TODOs : implement image crop and upload image logic
 
 def default_view(request):
@@ -33,7 +44,7 @@ def register_view(request, *args, **kwargs):
             if destination:
                 return redirect(destination)
             else:
-                return redirect('login')
+                return redirect('account:login')
         else:
             context['registration_form'] = form
 
@@ -212,3 +223,58 @@ def edit_account_view(request, *args, **kwargs):
         context['form'] = form
     # context['DATA_UPLOAD_MAX_MEMORY_SIZE'] = settings.DATA_UPLOAD_MAX_MEMORY_SIZE  # Max image size in Bytes
     return render(request, "account/edit_account.html", context)
+
+def save_temp_profile_image_from_base64String(imageString, user):
+  INCORRECT_PADDING_EXCEPTION = "Incorrect padding"
+  try:
+    print(MEDIA_ROOT)
+    if not os.path.exists(f"{MEDIA_ROOT}/profile_images/{str(user.pk)}/temp"):
+      os.mkdir(f"{MEDIA_ROOT}/profile_images/{str(user.pk)}/temp")
+    url = os.path.join(MEDIA_ROOT + "/profile_images/" + str(user.pk) + "/temp/temp_profile.png")
+    storage = FileSystemStorage(location=url)
+    image = base64.b64decode(imageString)
+    with storage.open('', 'wb+') as destination:
+      destination.write(image)
+      destination.close()
+    return url
+  except Exception as e:
+    print(e)
+    if(str(e) == INCORRECT_PADDING_EXCEPTION):
+      imageString += "=" * ((4 - len(imageString) % 4) % 4)
+      return save_temp_profile_image_from_base64String(imageString, user)
+  return None
+
+def crop_image_view(request, *args, **kwargs):
+  user = request.user
+  payload = {}
+  if request.method == 'POST' and user.is_authenticated:
+    try:
+      # print(request.body)
+      data = json.loads(request.body)
+      imageString = data["image"]
+      url = save_temp_profile_image_from_base64String(imageString, user)
+      img = cv2.imread(url)
+      cropX = int(float(str(data['cropX'])))
+      cropY = int(float(str(data['cropY'])))
+      cropWidth = int(float(str(data['cropWidth'])))
+      cropHeight = int(float(str(data['cropHeight'])))
+      if cropX < 0:
+        cropX = 0
+      if cropY < 0:
+        cropY = 0
+
+      crop_img = img[cropY:cropY+cropHeight, cropX:cropX+cropWidth]
+      cv2.imwrite(url, crop_img)
+      user.profile_image.delete()
+      # Save the cropped image to user model
+      user.profile_image.save("profile_image.png", files.File(open(url, 'rb')))
+      user.save()
+
+      payload["result"] = "success"
+      payload["cropped_profile_image"] = user.profile_image.url
+      os.remove(url)
+    except Exception as e:
+      print(e)
+      payload["result"] = "error"
+      payload["exception"] = str(e)
+  return HttpResponse(json.dumps(payload), content_type="application/json")

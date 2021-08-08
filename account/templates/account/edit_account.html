@@ -69,7 +69,7 @@
     </div>
 </div>
 <script>
-  console.log("{{form.initial.profile_image}}");
+  let cropper, imageFile, base64ImageString, cropX, cropY, cropWidth, cropHeight;
   enableImageOverlay();
 
   function handleEditImage() {
@@ -84,6 +84,18 @@
         var image = e.target.result;
         var imageDisplay = document.getElementById("id_profile_image_display")
         imageDisplay.src = image
+        cropper = new Cropper(imageDisplay, {
+          aspectRatio: 1/1,
+          crop(e) {
+            setImageCropProperties(
+              image,
+              e.detail.x,
+              e.detail.y,
+              e.detail.width,
+              e.detail.height,
+            )
+          }
+        })
       };
       reader.readAsDataURL(input.files[0]);
     }
@@ -120,7 +132,14 @@
 
     let confirm = document.getElementById("id_confirm");
     confirm.addEventListener("click", e=>{
-      // TODO
+      console.log("sending data to crop...")
+      cropImage(
+        imageFile,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+      )
       enableImageOverlay();
     })
 
@@ -130,5 +149,72 @@
       window.location.reload();
     })
   }
+  	/* return null if invalid or base64String if valid */
+	function isImageSizeValid(image){
+		console.log("max size: 5120KB")
+		// console.log(image)
+		var startIndex = image.indexOf("base64,") + 7;
+		var base64str = image.substr(startIndex);
+		var decoded = atob(base64str);
+		console.log("FileSize: " + decoded.length);
+		if(decoded.length>= "5240000"){
+			return null
+		}
+		return base64str
+	}
+
+  function cropImage(image, x, y, width, height){
+    let csrfmiddlewaretoken = "{{csrf_token}}";
+    base64ImageString = isImageSizeValid(image)
+    if (base64ImageString != null) {
+      let payload = {
+        'image': base64ImageString,
+        'cropX': x,
+        'cropY': y,
+        'cropWidth': width,
+        'cropHeight': height,
+      }
+      // displayLoadingSpinner(true)
+      // Send ajax request
+      let xhr = new XMLHttpRequest();
+      let url = "{% url 'account:crop-image' user_id=form.initial.id %}"
+      xhr.open("POST",url, "true")
+      xhr.setRequestHeader("X-CSRFToken", csrfmiddlewaretoken);
+      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+      xhr.onload = function () {
+        if (this.status >= 200 && this.status < 400) {
+          let data = JSON.parse(this.response);
+          console.log(data);
+          if (data["result"] === "success") {
+            document.getElementById("id_cancel").click()
+          } else if (data["result"] === "error") {
+            alert(data["exception"]);
+            document.getElementById("id_cancel").click()
+          }
+        } else {
+          console.log("We reached our target server, but it returned an error");
+        }
+      };
+      xhr.onerror = function () {
+        // There was a connection error of some sort
+      };
+
+      xhr.send(JSON.stringify(payload));
+    }
+    else {
+      alert("Upload an image smaller than 5 MB");
+      document.getElementById("id_cancel").click();
+    }
+  }
+
+  function setImageCropProperties(image, x, y, width, height){
+		imageFile = image
+		cropX = x
+		cropY = y
+		cropWidth = width
+		cropHeight = height
+	}
+
 </script>
 {% endblock body %}
