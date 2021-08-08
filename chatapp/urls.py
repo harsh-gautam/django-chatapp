@@ -15,7 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from . import views
+from django.conf.urls.static import static
+from . import views, settings
 from account.views import search_view
 
 
@@ -28,3 +29,6 @@ urlpatterns = [
     path('private/', include('private_chat.urls', namespace="private-chat")),
     path('search/', search_view, name="search"),    
 ]
+if settings.DEBUG:
+  urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+  urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
