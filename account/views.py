@@ -220,7 +220,7 @@ def edit_account_view(request, *args, **kwargs):
 				}
 			)
         context['form'] = form
-    # context['DATA_UPLOAD_MAX_MEMORY_SIZE'] = settings.DATA_UPLOAD_MAX_MEMORY_SIZE  # Max image size in Bytes
+    context['DATA_UPLOAD_MAX_MEMORY_SIZE'] = settings.DATA_UPLOAD_MAX_MEMORY_SIZE  # Max image size in Bytes
     return render(request, "account/edit_account.html", context)
 
 def save_temp_profile_image_from_base64String(imageString, user):
@@ -262,7 +262,8 @@ def crop_image_view(request, *args, **kwargs):
         cropY = 0
 
       crop_img = img[cropY:cropY+cropHeight, cropX:cropX+cropWidth]
-      cv2.imwrite(url, crop_img)
+      stretch_img = cv2.resize(crop_img, (cropWidth, cropHeight),interpolation = cv2.INTER_NEAREST)
+      cv2.imwrite(url, stretch_img)
       user.profile_image.delete()
       # Save the cropped image to user model
       user.profile_image.save("profile_image.png", files.File(open(url, 'rb')))
