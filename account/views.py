@@ -176,9 +176,11 @@ def edit_account_view(request, *args, **kwargs):
     if account.pk != request.user.pk:
         return HttpResponse("You cannot edit someone else profile")
     context = {}
+    print(request.POST, request.FILES)
     if request.POST:
-        form = UpdateForm(request.POST, instance=request.user)
+        form = UpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
+            account.profile_image.delete()
             print("VALID FORM")
             form.save()
             # new_username = form.cleaned_data['username']
@@ -190,8 +192,8 @@ def edit_account_view(request, *args, **kwargs):
 					"id": account.pk,
 					"email": account.email, 
 					"username": account.username,
-                    "name": account.name,
-					# "profile_image": account.profile_image,
+          "name": account.name,
+					"profile_image": account.profile_image,
 					"hide_email": account.hide_email,
 				}
 			)
@@ -202,8 +204,8 @@ def edit_account_view(request, *args, **kwargs):
 					"id": account.pk,
 					"email": account.email, 
 					"username": account.username,
-                    "name": account.name,
-					# "profile_image": account.profile_image,
+          "name": account.name,
+					"profile_image": account.profile_image,
 					"hide_email": account.hide_email,
 				}
 			)

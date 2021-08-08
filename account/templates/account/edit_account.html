@@ -10,17 +10,30 @@
     .profile-card {
         width: 500px;
     }
+
+    #id_cancel:hover, #id_confirm:hover{
+      cursor: pointer;
+    }
 </style>
 
 <div class="card  profile-card">
     <div class="card-header fs-3 fw-bolder">Profile</div>
     <div class="card-body align-items-center">
         <div class="d-flex flex-column align-items-center">
-            <div class="img-container mb-4">
-                <img class="" src="{% static 'images/default_profile.png' %}"
-                    alt="profile image" width="150" height="150">
+            <div class="mb-2" id="crop_confirm">
+              <span id="id_cancel">cross</span>
+              <span id="id_confirm">check</span>
             </div>
-            <form method="post" class="form-group">{% csrf_token %}
+            <div id="img-container" class="d-flex flex-column mb-4">
+                <img class="img-fluid rounded-circle" id="id_profile_image_display" src="{{form.initial.profile_image.url}}"
+                    alt="profile image" width="150" height="150">
+                <button id="edit_button" class="btn btn-primary btn-sm" onclick="handleEditImage()">
+                  Edit Image
+                </button>
+            </div>
+            
+            <form method="post" class="form-group" enctype="multipart/form-data">{% csrf_token %}
+              <input class="d-none" type="file" name="profile_image" id="id_profile_image" onchange="readURL(this)">
                 <div class="form-floating mb-3">
                     <input type="text" name="name" class="form-control" value="{{ form.initial.name }}" id="inputName" placeholder="Name">
                     <label for="inputName">Name</label>
@@ -55,4 +68,67 @@
         </div>
     </div>
 </div>
+<script>
+  console.log("{{form.initial.profile_image}}");
+  enableImageOverlay();
+
+  function handleEditImage() {
+    imageField = document.getElementById("id_profile_image").click();
+  }
+
+  function readURL(input){
+    if(input.files && input.files[0]){
+      var reader = new FileReader();
+      reader.onload = e => {
+        disableImageOverlay();
+        var image = e.target.result;
+        var imageDisplay = document.getElementById("id_profile_image_display")
+        imageDisplay.src = image
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function enableImageOverlay(){
+    var profileImage = document.getElementById("id_profile_image")
+		profileImage.style.opacity = "1"
+		profileImage.style.display = "block"
+		profileImage.style.width = "100%"
+		profileImage.style.height = "auto"
+		profileImage.style.transition = ".5s ease"
+		profileImage.style.backfaceVisibility  = "hidden"
+		profileImage.style.cursor = "pointer"
+
+    let cropConfirm = document.getElementById("crop_confirm")
+    cropConfirm.classList.remove("d-flex")
+    cropConfirm.classList.remove("flex-row")
+    cropConfirm.classList.remove("justify-content-between")
+    cropConfirm.classList.add("d-none")
+  }
+  function disableImageOverlay(){
+    let profileImage = document.getElementById("id_profile_image_display")
+    profileImage.style.opacity = "1"
+
+    let editButton = document.getElementById("edit_button")
+    editButton.classList.add("d-none")
+
+    let cropConfirm = document.getElementById("crop_confirm")
+    cropConfirm.classList.remove("d-none")
+    cropConfirm.classList.add("d-flex")
+    cropConfirm.classList.add("flex-row")
+    cropConfirm.classList.add("justify-content-between")
+
+    let confirm = document.getElementById("id_confirm");
+    confirm.addEventListener("click", e=>{
+      // TODO
+      enableImageOverlay();
+    })
+
+    let cancel = document.getElementById("id_cancel");
+    cancel.addEventListener("click", e=>{
+      console.log("Reloading window....")
+      window.location.reload();
+    })
+  }
+</script>
 {% endblock body %}

@@ -52,7 +52,7 @@ class UpdateForm(forms.ModelForm):
 
     class Meta:
         model = Account
-        fields = ("name", "email", "username", "hide_email")
+        fields = ("name", "email", "username", "profile_image", "hide_email")
 
     def clean_email(self):
         email = self.cleaned_data['email'].lower()
@@ -80,7 +80,7 @@ class UpdateForm(forms.ModelForm):
         account.username = self.cleaned_data['username']
         account.email = self.cleaned_data['email'].lower()
         account.name = self.cleaned_data['name'].lower()
-        # account.profile_image = self.cleaned_data['profile_image']
+        account.profile_image = self.cleaned_data['profile_image']
         account.hide_email = self.cleaned_data['hide_email']
         print(account)
         if commit:

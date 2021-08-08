@@ -41,16 +41,11 @@
         <div class="img-container d-flex flex-column mb-4">
           <img
             class="border border-2 border-success"
-            src="{% static 'images/default_profile.png' %}"
+            src="{{profile_image.url}}"
             alt="profile image"
             width="200"
             height="200"
           />
-          {% if is_self %}
-          <button class="btn btn-primary btn-sm" onclick="handleEditImage()">
-            Edit Image
-          </button>
-          {% endif %}
         </div>
         <p class="mb-1 mt-3 field-heading fw-bolder fs-4">Name</p>
         <h5 class="fw-normal fs-5">{{name|capfirst}}</h5>
